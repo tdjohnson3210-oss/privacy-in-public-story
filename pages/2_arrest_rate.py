@@ -24,7 +24,9 @@ st.markdown("<h1 style='text-align:center;'>Arrest Rate Across Privacy‑Related
 st.markdown("<h3 style='text-align:center; color:#3182bd;'>Which Privacy‑Linked Incidents Most Often Lead to Arrest?</h3>", unsafe_allow_html=True)
 
 # Load data
-df_privacy = pd.read_parquet("chicago_crime_snapshot_08242026.parquet")
+df_privacy = pd.read_parquet(
+    "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+)
 
 # Narrative
 st.markdown("""

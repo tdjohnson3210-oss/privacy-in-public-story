@@ -29,7 +29,9 @@ st.markdown("<h1 style='text-align:center;'>Arrest Rate by Hour</h1>", unsafe_al
 st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Shifts Across the Day in Public vs Private Spaces (across all case types)</h3>", unsafe_allow_html=True)
 
 # Load data
-df = pd.read_parquet("chicago_crime_snapshot_08242026.parquet")
+df = pd.read_parquet(
+    "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+)
 
 # Define public vs private
 df["space_type"] = df["privacy_location"].apply(

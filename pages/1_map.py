@@ -46,7 +46,9 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # Load data
-df_privacy = pd.read_parquet("chicago_crime_snapshot_08242026.parquet")
+df_privacy = pd.read_parquet(
+    "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+)
 
 # Dropdown filter for primary case type
 primary_types = sorted(df_privacy["primary_type"].unique())
