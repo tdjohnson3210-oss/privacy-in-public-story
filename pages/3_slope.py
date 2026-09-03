@@ -1,10 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-import requests
-from io import BytesIO
 
-# Page config/hide sidebar
 st.set_page_config(
     page_title="Slide 4 — What Time of Day Affects Arrest Rates",
     layout="wide",
@@ -20,54 +17,29 @@ hide_sidebar = """
 """
 st.markdown(hide_sidebar, unsafe_allow_html=True)
 
-# Navigation
 if st.button("Previous"):
     st.switch_page("pages/2_arrest_rate.py")
 if st.button("Next"):
     st.switch_page("pages/4_layered.py")
 
-# Title/subtitle
 st.markdown("<h1 style='text-align:center;'>Arrest Rate by Hour</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Shifts Across the Day in Public vs Private Spaces (across all case types)</h3>", unsafe_allow_html=True)
 
-# Load data (OneDrive direct-download fix)
-df = pd.read_parquet(
-    BytesIO(
-        requests.get(
-            "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
-        ).content
-    )
-)
+df = st.session_state.df_privacy.copy()
 
-# Define public vs private
 df["space_type"] = df["privacy_location"].apply(
     lambda x: "Private" if x == "Residential" else "Public"
 )
 
-# Create 'hour' column from datetime
 df["hour"] = df["date"].dt.hour
 
-# Arrest rate calculation
-total_df = (
-    df.groupby(["hour", "space_type"])
-    .size()
-    .reset_index(name="total_incidents")
-)
-
-arrest_df = (
-    df[df["arrest"] == True]
-    .groupby(["hour", "space_type"])
-    .size()
-    .reset_index(name="arrests")
-)
+total_df = df.groupby(["hour", "space_type"]).size().reset_index(name="total_incidents")
+arrest_df = df[df["arrest"]].groupby(["hour", "space_type"]).size().reset_index(name="arrests")
 
 merged = pd.merge(total_df, arrest_df, on=["hour", "space_type"], how="left")
 merged["arrests"] = merged["arrests"].fillna(0)
+merged["percent"] = merged["arrests"] / merged["total_incidents"] * 100
 
-# Compute arrest rate
-merged["percent"] = (merged["arrests"] / merged["total_incidents"]) * 100
-
-# Area chart
 fig = px.area(
     merged,
     x="hour",
@@ -91,7 +63,6 @@ fig.update_layout(
     yaxis=dict(range=[0, 100])
 )
 
-# Annotation
 private_peak = merged[merged["space_type"] == "Private"].sort_values("percent", ascending=False).iloc[0]
 fig.add_annotation(
     x=private_peak["hour"],
