@@ -1,10 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-import requests
-from io import BytesIO
 
-# Page config/hide sidebar
 st.set_page_config(
     page_title="Slide 5 — Layered Trend Analysis",
     layout="wide",
@@ -20,16 +17,13 @@ hide_sidebar = """
 """
 st.markdown(hide_sidebar, unsafe_allow_html=True)
 
-# Navigation
 if st.button("Previous"):
     st.switch_page("pages/3_slope.py")
 if st.button("Next"):
     st.switch_page("pages/5_conclusion.py")
 
-# Title/subtitle
 st.markdown("<h1 style='text-align:center;'>When Criminal Trespass Peaks... and When It Doesn’t</h1>", unsafe_allow_html=True)
 
-# Narrative
 st.markdown("""
 <div style="max-width: 750px; margin-left:auto; margin-right:auto; font-size:1.05rem; line-height:1.6; padding-top:10px;">
 Looking at arrest rates across the day adds another layer to the story. Criminal Trespass makes up most of the privacy-related caseload, 
@@ -40,32 +34,20 @@ Time of day shapes not just when incidents occur, but how likely they are to esc
 </div>
 """, unsafe_allow_html=True)
 
-# Load data (OneDrive direct-download fix)
-df = pd.read_parquet(
-    BytesIO(
-        requests.get(
-            "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
-        ).content
-    )
-)
+df = st.session_state.df_privacy.copy()
 
-# Create 'hour' column from datetime
 df["hour"] = df["date"].dt.hour
-
-# Criminal Trespass vs remaining case types
 df["group"] = df["primary_type"].apply(
     lambda x: "Criminal Trespass" if x == "CRIMINAL TRESPASS" else "All Other Offenses"
 )
 
-# Compute arrest rate
 total = df.groupby(["hour", "group"]).size().reset_index(name="total")
-arrests = df[df["arrest"] == True].groupby(["hour", "group"]).size().reset_index(name="arrests")
+arrests = df[df["arrest"]].groupby(["hour", "group"]).size().reset_index(name="arrests")
 
 merged = pd.merge(total, arrests, on=["hour", "group"], how="left")
 merged["arrests"] = merged["arrests"].fillna(0)
-merged["percent"] = (merged["arrests"] / merged["total"]) * 100
+merged["percent"] = merged["arrests"] / merged["total"] * 100
 
-# Area chart
 fig = px.area(
     merged,
     x="hour",
@@ -79,15 +61,11 @@ fig = px.area(
     }
 )
 
-fig.for_each_trace(
-    lambda t: t.update(opacity=0.9, line=dict(width=4)) if t.name == "Criminal Trespass"
-    else t.update(opacity=0.5, line=dict(width=2))
-)
-
 for i, trace in enumerate(fig.data):
     trace.stackgroup = str(i)
 
-# Shading
+fig.update_traces(mode="lines")
+
 fig.add_shape(
     type="rect",
     x0=18, x1=23,
@@ -97,7 +75,6 @@ fig.add_shape(
     layer="below"
 )
 
-# Annotation
 ct_peak = merged[merged["group"] == "Criminal Trespass"].sort_values("percent", ascending=False).iloc[0]
 fig.add_annotation(
     x=ct_peak["hour"],
