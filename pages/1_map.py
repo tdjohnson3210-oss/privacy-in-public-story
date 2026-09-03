@@ -30,7 +30,7 @@ q2 = st.session_state.get("q2", "")
 st.markdown("<h1 style='text-align:center;'>Arrest Outcomes in Privacy‑Related Incidents</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align:center; color:#3182bd;'>Chicago Crime Data • 2001–Present • Privacy‑Linked Case Subset (~3%)</h3>", unsafe_allow_html=True)
 
-# Survey responses highlighted
+# Narrative (updated to reflect sampling)
 st.markdown(f"""
 <div style="max-width: 750px; margin-left:auto; margin-right:auto; font-size:1.05rem; line-height:1.6;">
     <p>Your survey responses indicate:</p>
@@ -40,10 +40,11 @@ st.markdown(f"""
         <li><strong style="color:#3182bd;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
         <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
     </ul>
-   <p>To connect these perceptions to real‑world patterns, we turn to our pilot site: Chicago. Privacy‑related cases make up only about <strong>3%</strong> 
-   of all reported crimes since 2001, yet they highlight how differently people experience and enforce boundaries in shared public spaces. And even at such 
-   a small share of the overall caseload, the map shows these grouped privacy offenses scattered across the entire Chicago area, a reminder that boundary‑intrusion 
-   incidents aren’t isolated to one neighborhood or demographic, but happen wherever people move through and share space.</p>
+
+    <p>To connect these perceptions to real‑world patterns, we turn to our pilot site: Chicago. Privacy‑related cases make up only about 
+    <strong>3%</strong> of all reported crimes since 2001, yet they appear across every part of the city. For performance, the map below uses a 
+    representative sample of incidents rather than all 135,000+ points. Even with sampling, the geographic spread remains clear: boundary‑intrusion 
+    incidents aren’t isolated to one neighborhood or demographic, but occur wherever people move through shared public spaces.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -56,9 +57,6 @@ df_privacy = pd.read_parquet(
     )
 )
 
-# test
-st.write("Rows loaded:", len(df_privacy))
-
 # Dropdown filter for primary case type
 primary_types = sorted(df_privacy["primary_type"].unique())
 selected_type = st.selectbox("Filter by Case Type", ["All"] + primary_types)
@@ -68,6 +66,10 @@ df_filtered = (
     df_privacy if selected_type == "All"
     else df_privacy[df_privacy["primary_type"] == selected_type]
 )
+
+# SAMPLE to avoid browser freeze
+if len(df_filtered) > 5000:
+    df_filtered = df_filtered.sample(n=5000, random_state=42)
 
 # Map viz: Arrest vs. Non Arrest
 fig = px.scatter_mapbox(
@@ -102,4 +104,5 @@ fig.update_layout(
     margin={"r":0,"t":0,"l":0,"b":0},
     legend_title_text="Arrest Status"
 )
-st.plotly_chart(fig)
+
+st.plotly_chart(fig, use_container_width=True)
