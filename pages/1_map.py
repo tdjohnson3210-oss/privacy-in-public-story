@@ -30,7 +30,7 @@ q2 = st.session_state.get("q2", "")
 st.markdown("<h1 style='text-align:center;'>Arrest Outcomes in Privacy‑Related Incidents</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align:center; color:#3182bd;'>Chicago Crime Data • 2001–Present • Privacy‑Linked Case Subset (~3%)</h3>", unsafe_allow_html=True)
 
-# Narrative (updated)
+# Narrative (updated for map-free visual)
 st.markdown(f"""
 <div style="max-width: 750px; margin-left:auto; margin-right:auto; font-size:1.05rem; line-height:1.6;">
     <p>Your survey responses indicate:</p>
@@ -41,9 +41,10 @@ st.markdown(f"""
         <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
     </ul>
 
-    <p>To keep the map responsive, the visualization below uses a cleaned and representative sample of incidents. 
-    Even with sampling, the geographic spread remains clear: privacy‑related incidents occur across the entire city, 
-    not concentrated in any single neighborhood.</p>
+    <p>Instead of a traditional map, the visualization below uses a simple latitude–longitude scatter to show where privacy‑related 
+    incidents occur across Chicago. Even without a basemap, the pattern is unmistakable: these incidents appear throughout the entire 
+    city, not clustered in any single neighborhood. This lightweight view keeps the focus on spread and density without the performance 
+    issues of tile‑based mapping.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -62,12 +63,14 @@ df_privacy = df_privacy[
     df_privacy["longitude"].notna()
 ]
 
-# Convert to float (OneDrive sometimes loads as object)
 df_privacy["latitude"] = df_privacy["latitude"].astype(float)
 df_privacy["longitude"] = df_privacy["longitude"].astype(float)
 
-# Convert arrest to string for color mapping
-df_privacy["arrest_str"] = df_privacy["arrest"].map({True: "Arrest Made", False: "No Arrest"})
+# Convert arrest to readable label
+df_privacy["arrest_label"] = df_privacy["arrest"].map({
+    True: "Arrest Made",
+    False: "No Arrest"
+})
 
 # Dropdown filter
 primary_types = sorted(df_privacy["primary_type"].unique())
@@ -78,34 +81,30 @@ df_filtered = (
     else df_privacy[df_privacy["primary_type"] == selected_type]
 )
 
-# Sample for performance
-if len(df_filtered) > 5000:
-    df_filtered = df_filtered.sample(5000, random_state=42)
+# Sample for clarity and performance
+if len(df_filtered) > 8000:
+    df_filtered = df_filtered.sample(8000, random_state=42)
 
-# Build map
-fig = px.scatter_mapbox(
+# Build map-free scatter
+fig = px.scatter(
     df_filtered,
-    lat="latitude",
-    lon="longitude",
-    color="arrest_str",
-    hover_name="primary_type",
-    hover_data=["privacy_location", "time_of_day", "arrest_str"],
-    zoom=10,
-    height=600,
+    x="longitude",
+    y="latitude",
+    color="arrest_label",
+    labels={"longitude": "Longitude", "latitude": "Latitude"},
+    opacity=0.6,
     color_discrete_map={
         "Arrest Made": "#084594",
         "No Arrest": "#c6dbef"
-    }
-)
-
-fig.update_traces(
-    marker=dict(size=7, opacity=0.7)
+    },
+    hover_data=["primary_type", "privacy_location", "time_of_day"],
+    height=600
 )
 
 fig.update_layout(
-    mapbox_style="open-street-map",
-    margin={"r":0,"t":0,"l":0,"b":0},
-    legend_title_text="Arrest Status"
+    title="Geographic Spread of Privacy‑Related Incidents (Map-Free View)",
+    margin={"r":0,"t":40,"l":0,"b":0},
+    showlegend=True
 )
 
 st.plotly_chart(fig, use_container_width=True)
