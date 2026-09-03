@@ -56,6 +56,9 @@ df_privacy = pd.read_parquet(
     )
 )
 
+# test
+st.write("Rows loaded:", len(df_privacy))
+
 # Dropdown filter for primary case type
 primary_types = sorted(df_privacy["primary_type"].unique())
 selected_type = st.selectbox("Filter by Case Type", ["All"] + primary_types)
