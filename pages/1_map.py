@@ -1,6 +1,8 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+import requests
+from io import BytesIO
 
 # Remove sidebar
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
@@ -45,9 +47,13 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Load data
+# Load data (OneDrive direct-download fix)
 df_privacy = pd.read_parquet(
-    "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+    BytesIO(
+        requests.get(
+            "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+        ).content
+    )
 )
 
 # Dropdown filter for primary case type

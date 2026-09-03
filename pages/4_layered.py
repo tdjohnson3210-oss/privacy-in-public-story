@@ -1,6 +1,8 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+import requests
+from io import BytesIO
 
 # Page config/hide sidebar
 st.set_page_config(
@@ -20,7 +22,7 @@ st.markdown(hide_sidebar, unsafe_allow_html=True)
 
 # Navigation
 if st.button("Previous"):
-        st.switch_page("pages/3_slope.py")
+    st.switch_page("pages/3_slope.py")
 if st.button("Next"):
     st.switch_page("pages/5_conclusion.py")
 
@@ -38,9 +40,13 @@ Time of day shapes not just when incidents occur, but how likely they are to esc
 </div>
 """, unsafe_allow_html=True)
 
-# Load data
+# Load data (OneDrive direct-download fix)
 df = pd.read_parquet(
-    "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+    BytesIO(
+        requests.get(
+            "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+        ).content
+    )
 )
 
 # Create 'hour' column from datetime
@@ -66,7 +72,7 @@ fig = px.area(
     y="percent",
     color="group",
     labels={"percent": "Arrest Rate (%)", "hour": "Hour of Day"},
-    title="",
+    title="Arrest Rate Throughout the Day: Criminal Trespass vs All Other Offenses",
     color_discrete_map={
         "Criminal Trespass": "#08306b",
         "All Other Offenses": "#9ecae1"
@@ -113,4 +119,5 @@ fig.update_layout(
     legend_title_text="Offense Group",
     yaxis=dict(range=[0, 100])
 )
+
 st.plotly_chart(fig, use_container_width=True)

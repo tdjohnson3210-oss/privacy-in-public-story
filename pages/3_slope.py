@@ -1,6 +1,8 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
+import requests
+from io import BytesIO
 
 # Page config/hide sidebar
 st.set_page_config(
@@ -20,7 +22,7 @@ st.markdown(hide_sidebar, unsafe_allow_html=True)
 
 # Navigation
 if st.button("Previous"):
-        st.switch_page("pages/2_arrest_rate.py")
+    st.switch_page("pages/2_arrest_rate.py")
 if st.button("Next"):
     st.switch_page("pages/4_layered.py")
 
@@ -28,9 +30,13 @@ if st.button("Next"):
 st.markdown("<h1 style='text-align:center;'>Arrest Rate by Hour</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Shifts Across the Day in Public vs Private Spaces (across all case types)</h3>", unsafe_allow_html=True)
 
-# Load data
+# Load data (OneDrive direct-download fix)
 df = pd.read_parquet(
-    "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+    BytesIO(
+        requests.get(
+            "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+        ).content
+    )
 )
 
 # Define public vs private
@@ -70,8 +76,8 @@ fig = px.area(
     labels={"percent": "Arrest Rate (%)", "hour": "Hour of Day"},
     title="Arrest Rate Across the Day: Public vs Private Spaces",
     color_discrete_map={
-        "Public": "#08519c",   # deeper nighttime blue
-        "Private": "#6baed6"   # softer complementary blue
+        "Public": "#08519c",
+        "Private": "#6baed6"
     }
 )
 
@@ -98,4 +104,5 @@ fig.add_annotation(
     font=dict(color="red", size=12),
     arrowcolor="red"
 )
+
 st.plotly_chart(fig, use_container_width=True)
