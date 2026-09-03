@@ -1,5 +1,7 @@
 import streamlit as st
 
+st.markdown("<h1 style='text-align:center;'>Conclusion: What the Data Reveals About Privacy in Public Spaces</h1>", unsafe_allow_html=True)
+
 st.markdown("""
 <div style="max-width: 750px; margin-left:auto; margin-right:auto; font-size:1.05rem; line-height:1.6; padding-top:20px;">
 
