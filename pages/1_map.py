@@ -86,11 +86,11 @@ df_filtered = (
     else df_privacy[df_privacy["primary_type"] == selected_type]
 )
 
-# Sample for clarity and performance
+# Sample
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
 
-# Build map-free scatter
+# Build map
 fig = px.scatter(
     df_filtered,
     x="longitude",
@@ -99,13 +99,12 @@ fig = px.scatter(
     opacity=0.55,
     hover_data=["primary_type", "privacy_location", "time_of_day"],
     color_discrete_map={
-        "Arrest Made": "#084594",
-        "No Arrest": "#c6dbef"
+        "Arrest Made": "#4c8bf5",
+        "No Arrest": "#9bbcf5"
     },
     height=600
 )
 
-# Remove axes, grids, ticks — make it look like a map
 fig.update_xaxes(
     visible=False,
     showgrid=False,
@@ -122,9 +121,13 @@ fig.update_yaxes(
 fig.update_layout(
     title="Geographic Spread of Privacy‑Related Incidents (Map‑Like Scatter)",
     margin={"r":0,"t":40,"l":0,"b":0},
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    showlegend=True
+    plot_bgcolor="#0e1117",   
+    paper_bgcolor="#0e1117",
+    font_color="white",
+    showlegend=True,
+    legend=dict(
+        bgcolor="#0e1117",
+        bordercolor="#0e1117"
+    )
 )
-
 st.plotly_chart(fig, use_container_width=True)
