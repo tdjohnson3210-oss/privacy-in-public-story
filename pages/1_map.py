@@ -17,10 +17,13 @@ hide_sidebar = """
 st.markdown(hide_sidebar, unsafe_allow_html=True)
 
 # Navigation
-if st.button("Previous"):
-    st.switch_page("overview.py")
-if st.button("Next"):
-    st.switch_page("pages/2_arrest_rate.py")
+nav1, nav2 = st.columns([1,1])
+with nav1:
+    if st.button("Previous"):
+        st.switch_page("overview.py")
+with nav2:
+    if st.button("Next"):
+        st.switch_page("pages/2_arrest_rate.py")
 
 # Retrieve survey responses
 q1 = st.session_state.get("q1", "")
@@ -30,21 +33,23 @@ q2 = st.session_state.get("q2", "")
 st.markdown("<h1 style='text-align:center;'>Arrest Outcomes in Privacy‑Related Incidents</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align:center; color:#3182bd;'>Chicago Crime Data • 2001–Present • Privacy‑Linked Case Subset (~3%)</h3>", unsafe_allow_html=True)
 
-# Narrative (updated for map-free visual)
+# Clean narrative formatting
 st.markdown(f"""
-<div style="max-width: 750px; margin-left:auto; margin-right:auto; font-size:1.05rem; line-height:1.6;">
-    <p>Your survey responses indicate:</p>
-    <ul style="list-style-type:none; padding-left:0;">
-        <li><strong style="color:#3182bd;">• Time spent in public spaces: {q1}</strong></li>
-        <li><strong style="color:#3182bd;">• Experiences of discomfort or feeling watched: {q2}</strong></li>
-        <li><strong style="color:#3182bd;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
-        <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
-    </ul>
+<div style="max-width: 780px; margin-left:auto; margin-right:auto; font-size:1.05rem; line-height:1.6; padding-top:10px;">
 
-    <p>Instead of a traditional map, the visualization below uses a simple latitude–longitude scatter to show where privacy‑related 
-    incidents occur across Chicago. Even without a basemap, the pattern is unmistakable: these incidents appear throughout the entire 
-    city, not clustered in any single neighborhood. This lightweight view keeps the focus on spread and density without the performance 
-    issues of tile‑based mapping.</p>
+<p>Your survey responses indicate:</p>
+<ul style="list-style-type:none; padding-left:0;">
+    <li><strong style="color:#3182bd;">• Time spent in public spaces: {q1}</strong></li>
+    <li><strong style="color:#3182bd;">• Experiences of discomfort or feeling watched: {q2}</strong></li>
+    <li><strong style="color:#3182bd;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
+    <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
+</ul>
+
+<p>To keep the visualization lightweight and responsive, the chart below uses a simple latitude–longitude scatter instead of a full map. 
+Even without basemap tiles, the spread of points makes the pattern clear: privacy‑related incidents occur across the entire city, not 
+clustered in any single neighborhood. This “map‑like” view preserves the geographic story while avoiding the performance issues of 
+tile‑based mapping.</p>
+
 </div>
 """, unsafe_allow_html=True)
 
@@ -91,19 +96,34 @@ fig = px.scatter(
     x="longitude",
     y="latitude",
     color="arrest_label",
-    labels={"longitude": "Longitude", "latitude": "Latitude"},
-    opacity=0.6,
+    opacity=0.55,
+    hover_data=["primary_type", "privacy_location", "time_of_day"],
     color_discrete_map={
         "Arrest Made": "#084594",
         "No Arrest": "#c6dbef"
     },
-    hover_data=["primary_type", "privacy_location", "time_of_day"],
     height=600
 )
 
+# Remove axes, grids, ticks — make it look like a map
+fig.update_xaxes(
+    visible=False,
+    showgrid=False,
+    zeroline=False,
+    showticklabels=False
+)
+fig.update_yaxes(
+    visible=False,
+    showgrid=False,
+    zeroline=False,
+    showticklabels=False
+)
+
 fig.update_layout(
-    title="Geographic Spread of Privacy‑Related Incidents (Map-Free View)",
+    title="Geographic Spread of Privacy‑Related Incidents (Map‑Like Scatter)",
     margin={"r":0,"t":40,"l":0,"b":0},
+    plot_bgcolor="white",
+    paper_bgcolor="white",
     showlegend=True
 )
 
