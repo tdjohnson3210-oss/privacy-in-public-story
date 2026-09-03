@@ -41,7 +41,7 @@ import pyarrow.parquet as pq
 - **Data Story Preparation.ipynb** – Notebook for preparing the data story.  
 - **Storyboarding.html** – Main file containing the narrative, visualizations, and analysis.  
 - **README.md** – Project documentation and instructions.  
-- **Crimes_-_2001_to_Present_20250603.csv** – Full Chicago crime dataset used to determine high‑level proportions of privacy‑related case types. Stored on OneDrive for application use.
+- **Crimes_-_2001_to_Present_20250603.parquet** – Full Chicago crime dataset used to determine high‑level proportions of privacy‑related case types. Stored on OneDrive for application use.
 - **chicago_crime_snapshot_08242026.parquet** – Filtered dataset snapshot used for all privacy‑intrusion analysis. Stored on OneDrive for application use.
 - ** Technical Report Draft.docx** 
 
