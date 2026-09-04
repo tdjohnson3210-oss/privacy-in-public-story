@@ -3,6 +3,7 @@ import plotly.express as px
 import pandas as pd
 import requests
 from io import BytesIO
+from pathlib import Path
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
@@ -45,14 +46,33 @@ tile‑based mapping.</p>
 </div>
 """, unsafe_allow_html=True)
 
-if "df_privacy" not in st.session_state:
-    st.session_state.df_privacy = pd.read_parquet(
-        BytesIO(
-            requests.get(
-                "https://1drv.ms/u/c/9f797b0b40da44dd/IQBw0KpBzeecR6w_ehQfob0VAUPc0TuDb7jUsNwddV7Aanc?e=Y5GpyF"
-            ).content
+@st.cache_data
+def load_privacy_data():
+    candidates = [
+        Path(__file__).resolve().parents[1] / "chicago_crime_snapshot_08242026.parquet",
+        Path(__file__).resolve().parents[1] / "chicago_crimes.parquet",
+        Path(__file__).resolve().parents[1] / "data" / "chicago_crime_snapshot_08242026.parquet",
+    ]
+
+    for path in candidates:
+        if path.exists():
+            return pd.read_parquet(path)
+
+    url = "https://storage.googleapis.com/t-race-datasets/chicago_crime_snapshot_08242026.parquet"
+    response = requests.get(url, timeout=120, allow_redirects=True)
+    response.raise_for_status()
+
+    content = response.content
+    if not content.startswith(b"PAR1"):
+        raise ValueError(
+            "The dataset URL did not return a Parquet file. "
+            "Check that the public endpoint is valid and accessible."
         )
-    )
+
+    return pd.read_parquet(BytesIO(content))
+
+if "df_privacy" not in st.session_state:
+    st.session_state.df_privacy = load_privacy_data()
 
 df_privacy = st.session_state.df_privacy.copy()
 
