@@ -58,7 +58,7 @@ def load_privacy_data():
         if path.exists():
             return pd.read_parquet(path)
 
-    url = "https://storage.googleapis.com/t-race-datasets/chicago_crime_snapshot_08242026.parquet"
+    url = "https://www.dropbox.com/scl/fi/t457ji4mnih7zuegq4lzz/chicago_crime_snapshot_08242026.parquet?rlkey=ghoq2totei52mym13ai3d054r&st=01zmb58y&dl=1"
     response = requests.get(url, timeout=120, allow_redirects=True)
     response.raise_for_status()
 
@@ -72,7 +72,19 @@ def load_privacy_data():
     return pd.read_parquet(BytesIO(content))
 
 if "df_privacy" not in st.session_state:
-    st.session_state.df_privacy = load_privacy_data()
+    try:
+        st.session_state.df_privacy = load_privacy_data()
+    except requests.HTTPError:
+        st.error(
+            "The dataset URL is not publicly readable yet. In Google Cloud Storage, make the object public or use a publicly accessible direct-download link."
+        )
+        st.code(
+            "gsutil acl ch -u AllUsers:R gs://t-race-datasets/chicago_crime_snapshot_08242026.parquet"
+        )
+        st.stop()
+    except Exception as exc:
+        st.error(f"Unable to load the dataset: {exc}")
+        st.stop()
 
 df_privacy = st.session_state.df_privacy.copy()
 
