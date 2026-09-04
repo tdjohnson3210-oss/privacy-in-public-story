@@ -49,7 +49,7 @@ if "df_privacy" not in st.session_state:
     st.session_state.df_privacy = pd.read_parquet(
         BytesIO(
             requests.get(
-                "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+                "https://1drv.ms/u/c/9f797b0b40da44dd/IQBw0KpBzeecR6w_ehQfob0VAUPc0TuDb7jUsNwddV7Aanc?e=Y5GpyF"
             ).content
         )
     )
