@@ -8,6 +8,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Hide sidebar
 hide_sidebar = """
     <style>
         [data-testid="stSidebar"] {display: none;}
@@ -56,7 +57,7 @@ color_map = {
     "All Other Offenses": "#117A65"   # dark teal
 }
 
-# Layered line chart (not area)
+# Layered line chart (true layering)
 fig = go.Figure()
 
 for group in merged["group"].unique():
@@ -86,11 +87,11 @@ ct_peak = merged[merged["group"] == "Criminal Trespass"].sort_values("percent", 
 fig.add_annotation(
     x=ct_peak["hour"],
     y=ct_peak["percent"],
-    text=f"Criminal Trespass Peak: {ct_peak['percent']:.1f}%",
+    text=f"Peak Arrest Rate: {ct_peak['percent']:.1f}%",
     showarrow=True,
     arrowhead=2,
-    ax=-100,
-    ay=-50,
+    ax=-80,
+    ay=-40,
     font=dict(color="red", size=12),
     arrowcolor="red",
     bgcolor="white",
@@ -98,12 +99,25 @@ fig.add_annotation(
     borderwidth=1
 )
 
-# Layout
+# Layout improvements
 fig.update_layout(
-    title="Layered Arrest Rate Throughout the Day",
-    margin={"r":0,"t":50,"l":0,"b":0},
+    title="Layered Arrest Rate Across the Day",
+    xaxis=dict(
+        title="Hour of Day",
+        tickmode="array",
+        tickvals=list(range(0, 25, 2)),
+        ticktext=[f"{h}:00" for h in range(0, 25, 2)],
+        gridcolor="rgba(255,255,255,0.1)"
+    ),
+    yaxis=dict(
+        title="Arrest Rate (%)",
+        range=[0, 100],
+        tickmode="array",
+        tickvals=list(range(0, 101, 10)),
+        gridcolor="rgba(255,255,255,0.1)"
+    ),
     legend_title_text="Offense Group",
-    yaxis=dict(range=[0, 100]),
+    margin={"r":0,"t":50,"l":0,"b":0},
     paper_bgcolor="#0e1117",
     plot_bgcolor="#0e1117",
     font_color="#e0e0e0"
