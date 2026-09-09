@@ -112,10 +112,11 @@ df_filtered = (
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
 
-fig = px.scatter(
+# traditional map upgrade
+fig = px.scatter_mapbox(
     df_filtered,
-    x="longitude",
-    y="latitude",
+    lat="latitude",
+    lon="longitude",
     color="arrest_label",
     opacity=0.55,
     hover_data=["primary_type", "privacy_location", "time_of_day"],
@@ -123,14 +124,13 @@ fig = px.scatter(
         "Arrest Made": "#4c8bf5",
         "No Arrest": "#9bbcf5"
     },
-    height=600
+    height=600,
+    zoom=9
 )
 
-fig.update_xaxes(visible=False, showgrid=False, zeroline=False, showticklabels=False)
-fig.update_yaxes(visible=False, showgrid=False, zeroline=False, showticklabels=False)
-
 fig.update_layout(
-    title="Geographic Spread of Privacy‑Related Incidents (Map‑Like Scatter)",
+    mapbox_style="carto-positron",   # No token required
+    title="Geographic Spread of Privacy‑Related Incidents (Mapbox)",
     margin={"r":0,"t":40,"l":0,"b":0},
     plot_bgcolor="#0e1117",
     paper_bgcolor="#0e1117",
