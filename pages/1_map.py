@@ -39,8 +39,8 @@ st.markdown(f"""
     <li><strong style="color:#3182bd;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
     <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
 </ul>
-<p>The map below shows the geographic spread of privacy‑related incidents across Chicago. 
-Using a traditional basemap helps highlight how these incidents occur city‑wide rather than clustering in a single neighborhood.</p>
+<p>The map below shows the geographic spread of privacy‑related incidents across Chicago using a traditional basemap. 
+This avoids Mapbox dependency issues while still clearly showing city‑wide patterns.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -62,21 +62,13 @@ def load_privacy_data():
 
     content = response.content
     if not content.startswith(b"PAR1"):
-        raise ValueError(
-            "The dataset URL did not return a Parquet file. "
-            "Check that the public endpoint is valid and accessible."
-        )
+        raise ValueError("The dataset URL did not return a Parquet file.")
 
     return pd.read_parquet(BytesIO(content))
 
 if "df_privacy" not in st.session_state:
     try:
         st.session_state.df_privacy = load_privacy_data()
-    except requests.HTTPError:
-        st.error(
-            "The dataset URL is not publicly readable yet. Make the object public or use a direct-download link."
-        )
-        st.stop()
     except Exception as exc:
         st.error(f"Unable to load the dataset: {exc}")
         st.stop()
@@ -107,27 +99,34 @@ df_filtered = (
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
 
-# Upgraded traditional map
-fig = px.scatter_mapbox(
+# --- REPLACEMENT: scatter_geo (NO MAPBOX, ALWAYS WORKS) ---
+fig = px.scatter_geo(
     df_filtered,
     lat="latitude",
     lon="longitude",
     color="arrest_label",
+    hover_name="primary_type",
+    hover_data=["privacy_location", "time_of_day"],
     opacity=0.55,
-    hover_data=["primary_type", "privacy_location", "time_of_day"],
     color_discrete_map={
         "Arrest Made": "#4c8bf5",
         "No Arrest": "#9bbcf5"
     },
-    height=600,
-    zoom=9
+    height=600
 )
 
 fig.update_layout(
-    mapbox_style="open-street-map",
-    title="Geographic Spread of Privacy‑Related Incidents (Mapbox)",
+    title="Geographic Spread of Privacy‑Related Incidents (Traditional Map)",
+    geo=dict(
+        scope="usa",
+        projection_type="mercator",
+        showland=True,
+        landcolor="#1f1f1f",
+        subunitcolor="white",
+        countrycolor="white",
+        bgcolor="#0e1117"
+    ),
     margin={"r":0,"t":40,"l":0,"b":0},
-    plot_bgcolor="#0e1117",
     paper_bgcolor="#0e1117",
     font_color="white",
     showlegend=True,
