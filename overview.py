@@ -22,17 +22,20 @@ if st.button("Next"):
 st.markdown("<h1 style='text-align: center;'>Can You See My Personal Bubble? The Boundaries of Privacy in Public</h1>", unsafe_allow_html=True)
 st.write("")
 
-# Updated intro paragraphs (language only)
+# Updated intro paragraphs
 st.markdown("""
 <div style="max-width: 750px; margin-left: auto; margin-right: auto;">
 Public spaces are shared, but everyone carries a sense of personal space, that <i>invisible bubble</i> you notice most when someone steps too close, stares too long, or acts in a way that feels out of place. 
 Those moments don’t have to be dramatic to stand out. Sometimes it’s just a situation that feels “off,” a moment where you suddenly become more aware of yourself and the people around you.
 </div>
+
+<div style="max-width: 750px; margin-left: auto; margin-right: auto; margin-top: 18px;">
 This data story looks at when and where those kinds of public‑space intrusions show up in Chicago’s crime data. 
 Not the serious violent stuff, but the smaller, boundary‑crossing offenses that can make someone feel watched, bothered, or unsettled. 
 By exploring how these incidents cluster across different locations and times of day, we can see patterns in how privacy gets disrupted in everyday public life.
 </div>
 """, unsafe_allow_html=True)
+
 
 st.write("")
 
