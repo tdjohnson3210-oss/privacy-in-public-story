@@ -65,14 +65,31 @@ def categorize(pt):
 df["category"] = df["primary_type"].apply(categorize)
 df = df.dropna(subset=["category"])
 
-# Compute counts
+# Case types inside each category
+case_types_map = {
+    "Public-Heavy Offenses": [
+        "PUBLIC PEACE VIOLATION",
+        "PUBLIC INDECENCY",
+        "OBSCENITY"
+    ],
+    "Private-Heavy Offenses": [
+        "STALKING",
+        "INTIMIDATION",
+        "BOUNDARY VIOLATION"
+    ],
+    "Mixed Offense": [
+        "CRIMINAL TRESPASS"
+    ]
+}
+
+# Measure counts
 summary = (
     df.groupby(["category", "space_type"])
     .size()
     .reset_index(name="count")
 )
 
-# Compute share
+# Measure shares
 total_by_cat = summary.groupby("category")["count"].sum().reset_index(name="total")
 summary = summary.merge(total_by_cat, on="category")
 summary["share"] = summary["count"] / summary["total"]
@@ -81,29 +98,36 @@ summary["share"] = summary["count"] / summary["total"]
 pivot = summary.pivot(index="category", columns="space_type", values="share").reset_index()
 pivot = pivot.fillna(0)
 
-# Color-blind-safe palette
 color_map = {
-    "Public-Heavy Offenses": "#1B4F72",   # dark blue
-    "Private-Heavy Offenses": "#117A65",  # dark teal
-    "Mixed Offense": "#E67E22"            # dark orange
+    "Public-Heavy Offenses": "#1B4F72",
+    "Private-Heavy Offenses": "#117A65",
+    "Mixed Offense": "#E67E22"
 }
 
 # Build slope graph
 fig = go.Figure()
 
 for _, row in pivot.iterrows():
+    category = row["category"]
+    case_list = "<br>".join(case_types_map[category])
+
     fig.add_trace(go.Scatter(
         x=[0, 1],
         y=[row["Private"], row["Public"]],
         mode="lines+markers+text",
         text=[
-            f"{row['category']} ({row['Private']*100:.1f}%)",
-            f"{row['category']} ({row['Public']*100:.1f}%)"
+            f"{category} ({row['Private']*100:.1f}%)",
+            f"{category} ({row['Public']*100:.1f}%)"
         ],
         textposition="middle right",
-        line=dict(width=4, color=color_map[row["category"]]),
-        marker=dict(size=12, color=color_map[row["category"]]),
-        hovertemplate=f"{row['category']}<br>Private: {row['Private']*100:.1f}%<br>Public: {row['Public']*100:.1f}%"
+        line=dict(width=4, color=color_map[category]),
+        marker=dict(size=12, color=color_map[category]),
+        hovertemplate=(
+            f"<b>{category}</b><br>"
+            f"<b>Case Types:</b><br>{case_list}<br><br>"
+            f"Private Share: {row['Private']*100:.1f}%<br>"
+            f"Public Share: {row['Public']*100:.1f}%<extra></extra>"
+        )
     ))
 
 fig.update_layout(
