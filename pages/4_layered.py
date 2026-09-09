@@ -1,5 +1,5 @@
 import streamlit as st
-import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 
 st.set_page_config(
@@ -17,11 +17,13 @@ hide_sidebar = """
 """
 st.markdown(hide_sidebar, unsafe_allow_html=True)
 
+# Navigation
 if st.button("Previous"):
     st.switch_page("pages/3_slope.py")
 if st.button("Next"):
     st.switch_page("pages/5_conclusion.py")
 
+# Title + Narrative
 st.markdown("<h1 style='text-align:center;'>When Criminal Trespass Peaks... and When It Doesn’t</h1>", unsafe_allow_html=True)
 
 st.markdown("""
@@ -34,8 +36,8 @@ Time of day shapes not just when incidents occur, but how likely they are to esc
 </div>
 """, unsafe_allow_html=True)
 
+# Data
 df = st.session_state.df_privacy.copy()
-
 df["hour"] = df["date"].dt.hour
 df["group"] = df["primary_type"].apply(
     lambda x: "Criminal Trespass" if x == "CRIMINAL TRESPASS" else "All Other Offenses"
@@ -48,24 +50,28 @@ merged = pd.merge(total, arrests, on=["hour", "group"], how="left")
 merged["arrests"] = merged["arrests"].fillna(0)
 merged["percent"] = merged["arrests"] / merged["total"] * 100
 
-fig = px.area(
-    merged,
-    x="hour",
-    y="percent",
-    color="group",
-    labels={"percent": "Arrest Rate (%)", "hour": "Hour of Day"},
-    title="Arrest Rate Throughout the Day: Criminal Trespass vs All Other Offenses",
-    color_discrete_map={
-        "Criminal Trespass": "#08306b",
-        "All Other Offenses": "#9ecae1"
-    }
-)
+# Color-blind-safe palette
+color_map = {
+    "Criminal Trespass": "#1B4F72",   # dark blue
+    "All Other Offenses": "#117A65"   # dark teal
+}
 
-for i, trace in enumerate(fig.data):
-    trace.stackgroup = str(i)
+# Layered line chart (not area)
+fig = go.Figure()
 
-fig.update_traces(mode="lines")
+for group in merged["group"].unique():
+    subset = merged[merged["group"] == group]
 
+    fig.add_trace(go.Scatter(
+        x=subset["hour"],
+        y=subset["percent"],
+        mode="lines",
+        name=group,
+        line=dict(width=4, color=color_map[group]),
+        opacity=0.75
+    ))
+
+# Evening shading window
 fig.add_shape(
     type="rect",
     x0=18, x1=23,
@@ -75,6 +81,7 @@ fig.add_shape(
     layer="below"
 )
 
+# Peak annotation
 ct_peak = merged[merged["group"] == "Criminal Trespass"].sort_values("percent", ascending=False).iloc[0]
 fig.add_annotation(
     x=ct_peak["hour"],
@@ -91,10 +98,15 @@ fig.add_annotation(
     borderwidth=1
 )
 
+# Layout
 fig.update_layout(
+    title="Layered Arrest Rate Throughout the Day",
     margin={"r":0,"t":50,"l":0,"b":0},
     legend_title_text="Offense Group",
-    yaxis=dict(range=[0, 100])
+    yaxis=dict(range=[0, 100]),
+    paper_bgcolor="#0e1117",
+    plot_bgcolor="#0e1117",
+    font_color="#e0e0e0"
 )
 
 st.plotly_chart(fig, use_container_width=True)
