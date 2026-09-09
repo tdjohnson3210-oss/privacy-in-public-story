@@ -1,10 +1,9 @@
 import streamlit as st
+import plotly.express as px
 import pandas as pd
 import requests
 from io import BytesIO
 from pathlib import Path
-import folium
-from streamlit_folium import st_folium
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
@@ -40,8 +39,8 @@ st.markdown(f"""
     <li><strong style="color:#3182bd;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
     <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
 </ul>
-<p>The map below shows the geographic spread of privacy‑related incidents across Chicago using a fast, reliable basemap. 
-This avoids Mapbox issues and loads instantly on Streamlit Cloud.</p>
+<p>The map below uses a lightweight geographic projection centered on Chicago. 
+It loads quickly and avoids Mapbox or Folium dependencies.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -100,17 +99,38 @@ df_filtered = (
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
 
-# --- FOLIUM MAP (FASTEST + ALWAYS WORKS) ---
-m = folium.Map(location=[41.8781, -87.6298], zoom_start=10, tiles="CartoDB Positron")
+# --- WORKING GEO MAP (NO MAPBOX, NO FOLIUM) ---
+fig = px.scatter_geo(
+    df_filtered,
+    lat="latitude",
+    lon="longitude",
+    color="arrest_label",
+    hover_name="primary_type",
+    hover_data=["privacy_location", "time_of_day"],
+    opacity=0.55,
+    color_discrete_map={
+        "Arrest Made": "#4c8bf5",
+        "No Arrest": "#9bbcf5"
+    },
+    height=600
+)
 
-for _, row in df_filtered.iterrows():
-    folium.CircleMarker(
-        location=[row["latitude"], row["longitude"]],
-        radius=3,
-        color="#4c8bf5" if row["arrest_label"] == "Arrest Made" else "#9bbcf5",
-        fill=True,
-        fill_opacity=0.6,
-        popup=f"{row['primary_type']}<br>{row['privacy_location']}<br>{row['time_of_day']}"
-    ).add_to(m)
+fig.update_layout(
+    title="Geographic Spread of Privacy‑Related Incidents (Chicago Projection)",
+    geo=dict(
+        projection_type="mercator",
+        center=dict(lat=41.8781, lon=-87.6298),
+        lataxis=dict(range=[41.6, 42.1]),
+        lonaxis=dict(range=[-88.0, -87.4]),
+        showland=True,
+        landcolor="#1f1f1f",
+        bgcolor="#0e1117"
+    ),
+    margin={"r":0,"t":40,"l":0,"b":0},
+    paper_bgcolor="#0e1117",
+    font_color="white",
+    showlegend=True,
+    legend=dict(bgcolor="#0e1117", bordercolor="#0e1117")
+)
 
-st_folium(m, width=1200, height=600)
+st.plotly_chart(fig, use_container_width=True)
