@@ -4,11 +4,11 @@ Date: 09‑09‑2026
 Python version: 3.13
 
 ## Overview
-This project develops a data story centered on privacy intrusions in public spaces, using a filtered snapshot of the Chicago Crime Data dataset. Rather than focusing on violent crime, the analysis isolates non‑violent offenses that reflect moments where individuals may feel watched, unsafe, or vulnerable—such as criminal trespassing, stalking, intimidation, public indecency, and other privacy‑related violations.
+This project builds a data story about privacy intrusions in public spaces using a filtered snapshot of the Chicago Crime Data dataset. Instead of focusing on violent crime, the analysis highlights non‑violent offenses that involve boundary‑crossing behavior — the kinds of incidents that can make someone feel watched, bothered, or unsettled in everyday public life. These include offenses such as criminal trespassing, stalking, intimidation, public indecency, and other privacy‑related violations.
 
-The purpose of this data story is to explore how these seemingly minor public‑space intrusions connect to broader social patterns of fear and psychological safety. As recent research suggests, even small privacy disruptions can evoke discomfort, heighten vigilance, and serve as precursors to more serious interpersonal harms. This project examines whether such incidents show meaningful patterns across time, location, and behavior.
+The goal is to understand when and where these smaller public‑space intrusions tend to occur. By examining how they cluster across different environments and times of day, the project reveals patterns in how privacy gets disrupted in shared spaces — from residential blocks to commercial areas to outdoor public settings.
 
-The data story is presented through an interactive Streamlit application and a supporting Jupyter Notebook used during development.
+The data story is presented through an interactive Streamlit application, supported by a development‑stage Jupyter Notebook used for feature engineering and exploration.
 
 ## Streamlit Application
 Interactive Streamlit application:  
