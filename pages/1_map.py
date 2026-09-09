@@ -30,7 +30,7 @@ with nav2:
 st.markdown("<h1 style='text-align:center; color:#f2f2f2;'>Arrest Outcomes in Privacy‑Related Incidents</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align:center; color:#7db3ff;'>Chicago Crime Data • 2001–Present • Privacy‑Linked Case Subset (~3%)</h3>", unsafe_allow_html=True)
 
-# Survey summary (no extra text)
+# Survey summary (clean, no extra text)
 q1 = st.session_state.get("q1", "")
 q2 = st.session_state.get("q2", "")
 
@@ -95,6 +95,13 @@ df_filtered = df_privacy if selected_type == "All" else df_privacy[df_privacy["p
 
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
+
+# --- ANNOTATION ABOVE MAP ---
+st.markdown("""
+<div style="text-align:center; color:#cfcfcf; font-size:1.05rem; margin-top:20px; margin-bottom:10px;">
+These incidents aren’t clustered in one neighborhood — they appear across the entire city.
+</div>
+""", unsafe_allow_html=True)
 
 # --- REAL STREET MAP USING PYDECK (MAPLIBRE) ---
 layer = pdk.Layer(
