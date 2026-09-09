@@ -42,22 +42,21 @@ rate_df = (
     .reset_index(name="count")
 )
 
-# Total volume per type
 volume_df = df_privacy.groupby("primary_type").size().reset_index(name="total_cases")
 
-# Merge
 rate_df["percent"] = rate_df["count"] / rate_df.groupby("primary_type")["count"].transform("sum") * 100
 arrest_rates = rate_df[rate_df["arrest"]].merge(volume_df, on="primary_type")
 
 # Sort by arrest rate
-arrest_rates = arrest_rates.sort_values("percent", ascending=False)
+arrest_rates = arrest_rates.sort_values("percent", ascending=True)
 
-# Advanced bar chart
+# Horizontal bar chart (advanced + accessible)
 fig = px.bar(
     arrest_rates,
-    x="primary_type",
-    y="percent",
+    y="primary_type",
+    x="percent",
     color="total_cases",
+    orientation="h",
     color_continuous_scale=["#c6dbef", "#6baed6", "#2171b5", "#084594"],
     labels={
         "primary_type": "",
@@ -67,15 +66,34 @@ fig = px.bar(
     title="Arrest Rate by Case Type (Colored by Total Case Volume)"
 )
 
+# Clean dark theme
 fig.update_layout(
-    xaxis_tickangle=-45,
-    margin={"r":0,"t":50,"l":0,"b":0},
+    xaxis_title="Arrest Rate (%)",
+    yaxis_title="",
     paper_bgcolor="#0e1117",
     plot_bgcolor="#0e1117",
-    font_color="#e0e0e0"
+    font_color="#e0e0e0",
+    margin={"r":20,"t":50,"l":20,"b":20}
 )
 
-# Manual legend annotation (replaces coloraxis_colorbar)
+# Accessible annotation: highlight Criminal Trespass
+ct = arrest_rates[arrest_rates["primary_type"] == "CRIMINAL TRESPASS"].iloc[0]
+fig.add_annotation(
+    y=ct["primary_type"],
+    x=ct["percent"],
+    text=f"<b>High volume, low arrest rate</b><br>({ct['percent']:.1f}%)",
+    showarrow=True,
+    arrowhead=2,
+    ax=60,
+    ay=0,
+    font=dict(color="#f4d35e", size=12),
+    bgcolor="rgba(20,20,20,0.75)",
+    bordercolor="#f4d35e",
+    borderwidth=1,
+    align="left"
+)
+
+# Small legend note
 fig.add_annotation(
     x=0.98,
     y=0.95,
@@ -85,19 +103,6 @@ fig.add_annotation(
     showarrow=False,
     font=dict(color="#e0e0e0", size=12),
     align="right"
-)
-
-# Annotation: highlight Criminal Trespass
-ct = arrest_rates[arrest_rates["primary_type"] == "CRIMINAL TRESPASS"].iloc[0]
-fig.add_annotation(
-    x=ct["primary_type"],
-    y=ct["percent"],
-    text=f"High volume,\nlow arrest rate\n({ct['percent']:.1f}%)",
-    showarrow=True,
-    arrowhead=2,
-    ax=20,
-    ay=-40,
-    font=dict(color="#ff6b6b", size=12),
 )
 
 st.plotly_chart(fig, use_container_width=True)
