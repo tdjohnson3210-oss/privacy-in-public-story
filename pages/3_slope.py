@@ -29,13 +29,13 @@ st.markdown("<h1 style='text-align:center;'>Arrest Rate: Public vs Private Space
 st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Responds Differently When Privacy is Violated in Public vs Private Settings</h3>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# LOAD DATA DIRECTLY (no session_state needed)
+# LOAD FROM SESSION STATE (your request)
 # ---------------------------------------------------------
-df_privacy = pd.read_parquet(
-    "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
-)
+if "df_privacy" not in st.session_state:
+    st.error("df_privacy is not loaded in session_state. Load it on the first page.")
+    st.stop()
 
-df = df_privacy.copy()
+df = st.session_state.df_privacy.copy()
 
 # ---------------------------------------------------------
 # PREPARE PUBLIC vs PRIVATE VARIABLE
