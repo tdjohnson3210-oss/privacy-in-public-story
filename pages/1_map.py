@@ -1,9 +1,9 @@
 import streamlit as st
-import plotly.express as px
 import pandas as pd
 import requests
 from io import BytesIO
 from pathlib import Path
+import pydeck as pdk
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
@@ -27,15 +27,15 @@ with nav2:
         st.switch_page("pages/2_arrest_rate.py")
 
 # Accessible headings
-st.markdown("<h1 style='text-align:center; color:#e6e6e6;'>Arrest Outcomes in Privacy‑Related Incidents</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; color:#f2f2f2;'>Arrest Outcomes in Privacy‑Related Incidents</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align:center; color:#7db3ff;'>Chicago Crime Data • 2001–Present • Privacy‑Linked Case Subset (~3%)</h3>", unsafe_allow_html=True)
 
-# Survey summary
+# Survey summary (no extra text)
 q1 = st.session_state.get("q1", "")
 q2 = st.session_state.get("q2", "")
 
 st.markdown(f"""
-<div style="max-width: 780px; margin-left:auto; margin-right:auto; font-size:1.1rem; line-height:1.7; padding-top:10px; color:#d9d9d9;">
+<div style="max-width: 780px; margin-left:auto; margin-right:auto; font-size:1.15rem; line-height:1.7; padding-top:10px; color:#e0e0e0;">
 <p>Your survey responses indicate:</p>
 <ul style="list-style-type:none; padding-left:0;">
     <li><strong style="color:#7db3ff;">• Time spent in public spaces: {q1}</strong></li>
@@ -84,7 +84,7 @@ df_privacy["longitude"] = df_privacy["longitude"].astype(float)
 # Labels
 df_privacy["arrest_label"] = df_privacy["arrest"].map({
     True: "Arrest Made",
-    False: "No Arrest"
+    False: "Released"
 })
 
 # Filter
@@ -96,41 +96,35 @@ df_filtered = df_privacy if selected_type == "All" else df_privacy[df_privacy["p
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
 
-# --- FIXED MAP (Chicago-centered, visible, terrain-style) ---
-fig = px.scatter_geo(
+# --- REAL STREET MAP USING PYDECK (MAPLIBRE) ---
+layer = pdk.Layer(
+    "ScatterplotLayer",
     df_filtered,
-    lat="latitude",
-    lon="longitude",
-    color="arrest_label",
-    hover_name="primary_type",
-    hover_data=["privacy_location", "time_of_day"],
-    opacity=0.65,
-    color_discrete_map={
-        "Arrest Made": "#4c8bf5",
-        "No Arrest": "#9bbcf5"
-    },
-    height=600
+    get_position=["longitude", "latitude"],
+    get_fill_color=[
+        "255 if arrest_label == 'Arrest Made' else 120",
+        "180",
+        "255",
+        160
+    ],
+    radius_scale=2,
+    radius_min_pixels=3,
 )
 
-fig.update_geos(
-    projection_type="mercator",
-    center=dict(lat=41.8781, lon=-87.6298),
-    lataxis=dict(range=[41.6, 42.1]),
-    lonaxis=dict(range=[-88.0, -87.4]),
-    showland=True,
-    landcolor="#2b2b2b",
-    showocean=False,
-    bgcolor="#0e1117"
+view_state = pdk.ViewState(
+    latitude=41.8781,
+    longitude=-87.6298,
+    zoom=10,
+    pitch=0
 )
 
-fig.update_layout(
-    title="<b>Geographic Spread of Privacy‑Related Incidents (Chicago Map)</b>",
-    title_font_color="#e6e6e6",
-    margin={"r":0,"t":40,"l":0,"b":0},
-    paper_bgcolor="#0e1117",
-    plot_bgcolor="#0e1117",
-    font_color="#e6e6e6",
-    legend=dict(bgcolor="#0e1117", bordercolor="#0e1117")
+map_style = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+
+r = pdk.Deck(
+    layers=[layer],
+    initial_view_state=view_state,
+    map_style=map_style,
+    tooltip={"text": "{primary_type}\n{privacy_location}\n{time_of_day}"}
 )
 
-st.plotly_chart(fig, use_container_width=True)
+st.pydeck_chart(r)
