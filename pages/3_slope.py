@@ -25,11 +25,11 @@ if st.button("Next"):
 
 # Titles
 st.markdown("<h1 style='text-align:center;'>Arrest Rate: Public vs Private Spaces</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Differs When Privacy is Violated in Public vs Private Settings</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Responds Differently When Privacy is Violated in Public vs Private Settings</h3>", unsafe_allow_html=True)
 
 df = st.session_state.df_privacy.copy()
 
-# Simplify space type
+# Map privacy_location → public/private
 df["space_type"] = df["privacy_location"].apply(
     lambda x: "Private" if x == "Residential" else "Public"
 )
