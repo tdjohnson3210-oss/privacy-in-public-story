@@ -99,7 +99,6 @@ fig.add_annotation(
     y=0.95,
     xref="paper",
     yref="paper",
-    text="<b>Darker bars = more cases</b>",
     showarrow=False,
     font=dict(color="#e0e0e0", size=12),
     align="right"
