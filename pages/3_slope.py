@@ -32,9 +32,9 @@ st.markdown("<h1 style='text-align:center;'>Public vs Private Patterns Across Pr
 st.markdown("""
 <div style='text-align:center; font-size:18px; color:#cfcfcf; max-width:900px; margin:auto;'>
 Privacy-related offenses fall into three natural behavioral patterns.  
-<strong style='color:#ff6b6b;'>Public-heavy offenses</strong> (e.g., Public Indecency, Obscenity) occur overwhelmingly in public spaces.  
-<strong style='color:#4da6ff;'>Private-heavy offenses</strong> (e.g., Stalking, Intimidation) cluster in private environments.  
-<strong style='color:#f4d35e;'>Mixed offenses</strong> (Criminal Trespass) appear in both settings.  
+<strong style='color:#0072B2;'>Public-heavy offenses</strong> (Public Indecency, Obscenity) occur overwhelmingly in public spaces.  
+<strong style='color:#009E73;'>Private-heavy offenses</strong> (Stalking, Intimidation) cluster in private environments.  
+<strong style='color:#D55E00;'>Mixed offenses</strong> (Criminal Trespass) appear in both settings.  
 This slope shows how each category shifts from private → public.
 </div>
 """, unsafe_allow_html=True)
@@ -81,11 +81,11 @@ summary["share"] = summary["count"] / summary["total"]
 pivot = summary.pivot(index="category", columns="space_type", values="share").reset_index()
 pivot = pivot.fillna(0)
 
-# Colors mapped to meaning
+# Color-blind-safe palette
 color_map = {
-    "Public-Heavy Offenses": "#ff6b6b",   # red
-    "Private-Heavy Offenses": "#4da6ff",  # blue
-    "Mixed Offense": "#f4d35e"            # gold
+    "Public-Heavy Offenses": "#0072B2",   # Blue
+    "Private-Heavy Offenses": "#009E73",  # Green
+    "Mixed Offense": "#D55E00"            # Orange
 }
 
 # Build slope graph
@@ -119,7 +119,7 @@ fig.update_layout(
     plot_bgcolor="#0e1117",
     font_color="#e0e0e0",
     margin={"r":20,"t":50,"l":20,"b":20},
-    showlegend=False  # REMOVE LEGEND
+    showlegend=False  # Legend removed
 )
 
 st.plotly_chart(fig, use_container_width=True)
