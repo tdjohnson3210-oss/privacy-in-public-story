@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 import pandas as pd
 
 st.set_page_config(
-    page_title="Slide 4 — Domestic vs Non‑Domestic Arrest Rate",
+    page_title="Slide 4 — Public vs Private Arrest Rate",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -24,21 +24,25 @@ if st.button("Next"):
     st.switch_page("pages/4_layered.py")
 
 # Titles
-st.markdown("<h1 style='text-align:center;'>Arrest Rate: Domestic vs Non‑Domestic</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Differs When Incidents Occur in Domestic Contexts</h3>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;'>Arrest Rate: Public vs Private Spaces</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Differs When Privacy is Violated in Public vs Private Settings</h3>", unsafe_allow_html=True)
 
-# Load data
 df = st.session_state.df_privacy.copy()
 
-# Compute arrest rate for domestic vs non‑domestic
+# Simplify space type
+df["space_type"] = df["privacy_location"].apply(
+    lambda x: "Private" if x == "Residential" else "Public"
+)
+
+# Compute arrest rate
 summary = (
-    df.groupby("domestic")["arrest"]
+    df.groupby("space_type")["arrest"]
     .mean()
     .reset_index()
 )
 
-summary["label"] = summary["domestic"].map({True: "Domestic", False: "Non‑Domestic"})
 summary["percent"] = summary["arrest"] * 100
+summary = summary.sort_values("percent", ascending=False)
 
 # Build slope graph
 fig = go.Figure()
@@ -47,19 +51,18 @@ fig.add_trace(go.Scatter(
     x=[0, 1],
     y=summary["percent"],
     mode="lines+markers+text",
-    text=[f"Non‑Domestic ({summary['percent'].iloc[0]:.1f}%)",
-          f"Domestic ({summary['percent'].iloc[1]:.1f}%)"],
+    text=[f"Public ({summary['percent'].iloc[0]:.1f}%)",
+          f"Private ({summary['percent'].iloc[1]:.1f}%)"],
     textposition="middle right",
     line=dict(width=3, color="#6baed6"),
     marker=dict(size=10, color="#08519c")
 ))
 
-# Layout
 fig.update_layout(
-    title="Arrest Rate Comparison: Domestic vs Non‑Domestic Incidents",
+    title="Arrest Rate Comparison: Public vs Private Spaces",
     xaxis=dict(
         tickvals=[0, 1],
-        ticktext=["Non‑Domestic", "Domestic"],
+        ticktext=["Public", "Private"],
         showgrid=False,
         zeroline=False
     ),
@@ -70,12 +73,12 @@ fig.update_layout(
     margin={"r":20,"t":50,"l":20,"b":20}
 )
 
-# Annotation (accessible gold)
-domestic_rate = summary[summary["domestic"] == True]["percent"].iloc[0]
+# Accessible annotation
+private_rate = summary[summary["space_type"] == "Private"]["percent"].iloc[0]
 fig.add_annotation(
     x=1,
-    y=domestic_rate,
-    text=f"<b>Domestic Arrest Rate</b><br>{domestic_rate:.1f}%",
+    y=private_rate,
+    text=f"<b>Private Arrest Rate</b><br>{private_rate:.1f}%",
     showarrow=True,
     arrowhead=2,
     ax=40,
