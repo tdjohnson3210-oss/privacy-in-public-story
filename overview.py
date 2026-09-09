@@ -22,20 +22,24 @@ if st.button("Next"):
 st.markdown("<h1 style='text-align: center;'>Can You See My Personal Bubble? The Boundaries of Privacy in Public</h1>", unsafe_allow_html=True)
 st.write("")
 
-# Intro paragraphs  html
+# Updated intro paragraphs (language only)
 st.markdown("""
 <div style="max-width: 750px; margin-left: auto; margin-right: auto;">
-Public spaces are shared, but people still carry a basic expectation of personal privacy when moving through them. 
-Even small moments of feeling watched or unsafe can create discomfort and reduce psychological safety. 
-This data story explores when and where those moments tend to occur, and how they might build into more serious concerns.
+Public spaces are shared, but everyone carries a sense of personal space — that invisible bubble you notice most when someone steps too close, stares too long, or acts in a way that feels out of place. 
+Those moments don’t have to be dramatic to stand out. Sometimes it’s just a situation that feels “off,” a moment where you suddenly become more aware of yourself and the people around you.
+
+This data story looks at when and where those kinds of public‑space intrusions show up in Chicago’s crime data. 
+Not the serious violent stuff — but the smaller, boundary‑crossing offenses that can make someone feel watched, bothered, or unsettled. 
+By exploring how these incidents cluster across different locations and times of day, we can see patterns in how privacy gets disrupted in everyday public life.
 </div>
 """, unsafe_allow_html=True)
 
 st.write("")
 
+# Survey intro (unchanged except for tone)
 st.markdown("""
 <div style="max-width: 750px; margin-left: auto; margin-right: auto;">
-<strong>Before we begin, please take the time to answer a brief four‑question survey in order to understand your expectations of privacy in public spaces.</strong>
+<strong>Before we begin, take a moment to answer a quick four‑question survey about your own expectations of privacy in public spaces.</strong>
 </div>
 """, unsafe_allow_html=True)
 
@@ -83,7 +87,3 @@ if submitted:
     st.session_state['q3'] = q3
     st.session_state['q4'] = q4
     st.success("Your responses have been recorded for this session.")
-
-
-# Test in terminal
-# streamlit run overview.py
