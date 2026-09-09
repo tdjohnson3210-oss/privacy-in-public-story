@@ -7,6 +7,7 @@ from pathlib import Path
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
+# Hide sidebar
 hide_sidebar = """
     <style>
         [data-testid="stSidebar"] {display: none;}
@@ -16,6 +17,7 @@ hide_sidebar = """
 """
 st.markdown(hide_sidebar, unsafe_allow_html=True)
 
+# Navigation
 nav1, nav2 = st.columns([1,1])
 with nav1:
     if st.button("Previous"):
@@ -24,24 +26,27 @@ with nav2:
     if st.button("Next"):
         st.switch_page("pages/2_arrest_rate.py")
 
+# Accessible headings
+st.markdown("<h1 style='text-align:center; color:#e6e6e6;'>Arrest Outcomes in Privacy‑Related Incidents</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align:center; color:#7db3ff;'>Chicago Crime Data • 2001–Present • Privacy‑Linked Case Subset (~3%)</h3>", unsafe_allow_html=True)
+
+# Survey summary
 q1 = st.session_state.get("q1", "")
 q2 = st.session_state.get("q2", "")
 
-st.markdown("<h1 style='text-align:center;'>Arrest Outcomes in Privacy‑Related Incidents</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align:center; color:#3182bd;'>Chicago Crime Data • 2001–Present • Privacy‑Linked Case Subset (~3%)</h3>", unsafe_allow_html=True)
-
 st.markdown(f"""
-<div style="max-width: 780px; margin-left:auto; margin-right:auto; font-size:1.05rem; line-height:1.6; padding-top:10px;">
+<div style="max-width: 780px; margin-left:auto; margin-right:auto; font-size:1.1rem; line-height:1.7; padding-top:10px; color:#d9d9d9;">
 <p>Your survey responses indicate:</p>
 <ul style="list-style-type:none; padding-left:0;">
-    <li><strong style="color:#3182bd;">• Time spent in public spaces: {q1}</strong></li>
-    <li><strong style="color:#3182bd;">• Experiences of discomfort or feeling watched: {q2}</strong></li>
-    <li><strong style="color:#3182bd;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
-    <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
+    <li><strong style="color:#7db3ff;">• Time spent in public spaces: {q1}</strong></li>
+    <li><strong style="color:#7db3ff;">• Experiences of discomfort or feeling watched: {q2}</strong></li>
+    <li><strong style="color:#7db3ff;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
+    <li><strong style="color:#7db3ff;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
 </ul>
 </div>
 """, unsafe_allow_html=True)
 
+# Load data
 @st.cache_data
 def load_privacy_data():
     candidates = [
@@ -49,55 +54,49 @@ def load_privacy_data():
         Path(__file__).resolve().parents[1] / "chicago_crimes.parquet",
         Path(__file__).resolve().parents[1] / "data" / "chicago_crime_snapshot_08242026.parquet",
     ]
-
     for path in candidates:
         if path.exists():
             return pd.read_parquet(path)
 
     url = "https://www.dropbox.com/scl/fi/t457ji4mnih7zuegq4lzz/chicago_crime_snapshot_08242026.parquet?rlkey=ghoq2totei52mym13ai3d054r&st=01zmb58y&dl=1"
-    response = requests.get(url, timeout=120, allow_redirects=True)
+    response = requests.get(url, timeout=120)
     response.raise_for_status()
 
     content = response.content
     if not content.startswith(b"PAR1"):
-        raise ValueError("The dataset URL did not return a Parquet file.")
+        raise ValueError("Dataset URL did not return a Parquet file.")
 
     return pd.read_parquet(BytesIO(content))
 
 if "df_privacy" not in st.session_state:
-    try:
-        st.session_state.df_privacy = load_privacy_data()
-    except Exception as exc:
-        st.error(f"Unable to load the dataset: {exc}")
-        st.stop()
+    st.session_state.df_privacy = load_privacy_data()
 
 df_privacy = st.session_state.df_privacy.copy()
 
+# Clean lat/lon
 df_privacy = df_privacy[
     df_privacy["latitude"].notna() &
     df_privacy["longitude"].notna()
 ]
-
 df_privacy["latitude"] = df_privacy["latitude"].astype(float)
 df_privacy["longitude"] = df_privacy["longitude"].astype(float)
 
+# Labels
 df_privacy["arrest_label"] = df_privacy["arrest"].map({
     True: "Arrest Made",
     False: "No Arrest"
 })
 
+# Filter
 primary_types = sorted(df_privacy["primary_type"].unique())
 selected_type = st.selectbox("Filter by Case Type", ["All"] + primary_types)
 
-df_filtered = (
-    df_privacy if selected_type == "All"
-    else df_privacy[df_privacy["primary_type"] == selected_type]
-)
+df_filtered = df_privacy if selected_type == "All" else df_privacy[df_privacy["primary_type"] == selected_type]
 
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
 
-# Upgraded map
+# --- FIXED MAP (Chicago-centered, visible, terrain-style) ---
 fig = px.scatter_geo(
     df_filtered,
     lat="latitude",
@@ -105,7 +104,7 @@ fig = px.scatter_geo(
     color="arrest_label",
     hover_name="primary_type",
     hover_data=["privacy_location", "time_of_day"],
-    opacity=0.55,
+    opacity=0.65,
     color_discrete_map={
         "Arrest Made": "#4c8bf5",
         "No Arrest": "#9bbcf5"
@@ -113,21 +112,24 @@ fig = px.scatter_geo(
     height=600
 )
 
+fig.update_geos(
+    projection_type="mercator",
+    center=dict(lat=41.8781, lon=-87.6298),
+    lataxis=dict(range=[41.6, 42.1]),
+    lonaxis=dict(range=[-88.0, -87.4]),
+    showland=True,
+    landcolor="#2b2b2b",
+    showocean=False,
+    bgcolor="#0e1117"
+)
+
 fig.update_layout(
-    title="Geographic Spread of Privacy‑Related Incidents (Traditional Map)",
-    geo=dict(
-        scope="usa",
-        projection_type="mercator",
-        showland=True,
-        landcolor="#1f1f1f",
-        subunitcolor="white",
-        countrycolor="white",
-        bgcolor="#0e1117"
-    ),
+    title="<b>Geographic Spread of Privacy‑Related Incidents (Chicago Map)</b>",
+    title_font_color="#e6e6e6",
     margin={"r":0,"t":40,"l":0,"b":0},
     paper_bgcolor="#0e1117",
-    font_color="white",
-    showlegend=True,
+    plot_bgcolor="#0e1117",
+    font_color="#e6e6e6",
     legend=dict(bgcolor="#0e1117", bordercolor="#0e1117")
 )
 
