@@ -21,8 +21,7 @@ The app also includes an **embedded Streamlit survey**, replacing the earlier Mi
 ## Data Source
 This project uses publicly available crime data from the **Chicago Data Portal**, which provides detailed records of all reported crimes from 2001 to the present. The full dataset contains millions of observations and is used here to determine **high‑level proportions** of privacy‑related case types within Chicago’s broader crime landscape.
 
-A filtered snapshot (**chicago_crime_snapshot_08242026.parquet**, downloaded 08‑24‑2026) was created to isolate incidents most relevant to privacy intrusion.  
-The snapshot is stored on **Dropbox**, and the Streamlit application loads it directly from the hosted link.
+A filtered snapshot (**chicago_crime_snapshot_08242026.parquet**, downloaded 08‑24‑2026) was created to isolate incidents most relevant to privacy intrusion. The snapshot is stored on **Dropbox**, and the Streamlit application loads it directly from the hosted link.
 
 All analysis, visualizations, and engineered features in this project are based on this filtered subset.
 
