@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 import pandas as pd
 
 st.set_page_config(
-    page_title="Slide 3 — Slope: Criminal Trespass vs All Others",
+    page_title="Slide 3 — Slope: Public vs Private Categories",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -25,8 +25,8 @@ if st.button("Next"):
     st.switch_page("pages/4_layered.py")
 
 # Titles
-st.markdown("<h1 style='text-align:center;'>Criminal Trespass vs All Other Privacy Offenses</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Incident Distribution Shifts Between Private and Public Spaces</h3>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;'>Public vs Private Patterns Across Privacy Offense Categories</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align:center; color:#3182bd;'>Slope Graph: How Offense Categories Shift Between Private and Public Spaces</h3>", unsafe_allow_html=True)
 
 # Load from session_state
 if "df_privacy" not in st.session_state:
@@ -40,26 +40,37 @@ df["space_type"] = df["privacy_location"].apply(
     lambda x: "Private" if x == "Residential" else "Public"
 )
 
-# Criminal vs All Others
-df["group"] = df["primary_type"].apply(
-    lambda x: "Criminal Trespass" if x == "CRIMINAL TRESPASS" else "All Other Offenses"
-)
+# Pattern 1 categories
+def categorize(pt):
+    if pt in ["PUBLIC PEACE VIOLATION", "PUBLIC INDECENCY", "OBSCENITY"]:
+        return "Public-Heavy Offenses"
+    elif pt in ["STALKING", "INTIMIDATION", "BOUNDARY VIOLATION"]:
+        return "Private-Heavy Offenses"
+    elif pt == "CRIMINAL TRESPASS":
+        return "Mixed Offense"
+    else:
+        return "Other"
+
+df["category"] = df["primary_type"].apply(categorize)
 
 # Compute counts
 summary = (
-    df.groupby(["group", "space_type"])
+    df.groupby(["category", "space_type"])
     .size()
     .reset_index(name="count")
 )
 
 # Compute share
-total_by_group = summary.groupby("group")["count"].sum().reset_index(name="total")
-summary = summary.merge(total_by_group, on="group")
+total_by_cat = summary.groupby("category")["count"].sum().reset_index(name="total")
+summary = summary.merge(total_by_cat, on="category")
 summary["share"] = summary["count"] / summary["total"]
 
 # Pivot for slope graph
-pivot = summary.pivot(index="group", columns="space_type", values="share").reset_index()
+pivot = summary.pivot(index="category", columns="space_type", values="share").reset_index()
 pivot = pivot.fillna(0)
+
+# Sort by public share
+pivot = pivot.sort_values("Public", ascending=False)
 
 # Build slope graph
 fig = go.Figure()
@@ -70,17 +81,17 @@ for _, row in pivot.iterrows():
         y=[row["Private"], row["Public"]],
         mode="lines+markers+text",
         text=[
-            f"{row['group']} ({row['Private']*100:.1f}%)",
-            f"{row['group']} ({row['Public']*100:.1f}%)"
+            f"{row['category']} ({row['Private']*100:.1f}%)",
+            f"{row['category']} ({row['Public']*100:.1f}%)"
         ],
         textposition="middle right",
         line=dict(width=3, color="#6baed6"),
         marker=dict(size=10, color="#08519c"),
-        hovertemplate=f"{row['group']}<br>Private: {row['Private']*100:.1f}%<br>Public: {row['Public']*100:.1f}%"
+        hovertemplate=f"{row['category']}<br>Private: {row['Private']*100:.1f}%<br>Public: {row['Public']*100:.1f}%"
     ))
 
 fig.update_layout(
-    title="Distribution Shift: Criminal Trespass vs All Other Offenses (Private → Public)",
+    title="Distribution Shift by Offense Category (Private → Public)",
     xaxis=dict(
         tickvals=[0, 1],
         ticktext=["Private", "Public"],
