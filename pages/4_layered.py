@@ -29,11 +29,13 @@ st.markdown("<h1 style='text-align:center;'>When Criminal Trespass Peaks... and 
 
 st.markdown("""
 <div style="max-width: 750px; margin-left:auto; margin-right:auto; font-size:1.05rem; line-height:1.6; padding-top:10px;">
-Looking at arrest rates across the day adds another layer to the story. Criminal Trespass makes up most of the privacy-related caseload, 
-but its enforcement rhythm doesn’t mirror its volume. Across much of the day, its arrest rate stays steady, only rising as the city moves 
-into the late evening hours. The remaining offenses follow a softer, more stable rhythm. Seeing these layers together shows how people 
-experience enforcement in shared spaces: the offense that happens most often peaks later in the day, while the rest maintain a quieter profile. 
-Time of day shapes not just when incidents occur, but how likely they are to escalate into enforcement.
+Looking at arrest rates across the day adds another layer to the story. 
+<strong style="color:#1B4F72;">Criminal Trespass</strong> makes up most of the privacy-related caseload, 
+but its enforcement rhythm doesn’t mirror its volume. Across much of the day, its arrest rate stays steady, 
+only rising as the city moves into the late evening hours. The remaining offenses follow a softer, more stable rhythm. 
+Seeing these layers together shows how people experience enforcement in shared spaces: the offense that happens most often 
+peaks later in the day, while the rest maintain a quieter profile. Time of day shapes not just when incidents occur, 
+but how likely they are to escalate into enforcement.
 </div>
 """, unsafe_allow_html=True)
 
@@ -57,7 +59,7 @@ color_map = {
     "All Other Offenses": "#117A65"   # dark teal
 }
 
-# Layered line chart (true layering)
+# Layered line chart
 fig = go.Figure()
 
 for group in merged["group"].unique():
@@ -69,7 +71,20 @@ for group in merged["group"].unique():
         mode="lines",
         name=group,
         line=dict(width=4, color=color_map[group]),
-        opacity=0.75
+        opacity=0.75,
+        hovertemplate=(
+            "<b>Group:</b> %{customdata[0]}<br>"
+            "<b>Hour:</b> %{customdata[1]}:00<br>"
+            "<b>Arrest Rate:</b> %{y:.1f}%<br>"
+            "<b>Arrests:</b> %{customdata[2]}<br>"
+            "<b>Total Incidents:</b> %{customdata[3]}<extra></extra>"
+        ),
+        customdata=list(zip(
+            subset["group"],
+            subset["hour"],
+            subset["arrests"],
+            subset["total"]
+        ))
     ))
 
 # Evening shading window
