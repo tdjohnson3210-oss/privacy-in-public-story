@@ -20,21 +20,21 @@ st.markdown(hide_sidebar, unsafe_allow_html=True)
 
 # Navigation
 cols = st.columns([1,1,8])
-if cols[0].button("← Previous"):
+if cols[0].button("Previous"):
     st.switch_page("pages/2_arrest_rate.py")
-if cols[1].button("Next →"):
+if cols[1].button("Next"):
     st.switch_page("pages/4_layered.py")
 
 # Title
 st.markdown("<h1 style='text-align:center;'>Public vs Private Patterns Across Privacy Offense Categories</h1>", unsafe_allow_html=True)
 
-# Brief explanation
+# Explanation
 st.markdown("""
 <div style='text-align:center; font-size:18px; color:#cfcfcf; max-width:900px; margin:auto;'>
 Privacy-related offenses fall into three natural behavioral patterns.  
-<strong style='color:#0072B2;'>Public-heavy offenses</strong> (Public Indecency, Obscenity) occur overwhelmingly in public spaces.  
-<strong style='color:#009E73;'>Private-heavy offenses</strong> (Stalking, Intimidation) cluster in private environments.  
-<strong style='color:#D55E00;'>Mixed offenses</strong> (Criminal Trespass) appear in both settings.  
+<strong style='color:#1B4F72;'>Public-heavy offenses</strong> occur overwhelmingly in public spaces.  
+<strong style='color:#117A65;'>Private-heavy offenses</strong> cluster in private environments.  
+<strong style='color:#E67E22;'>Mixed offenses</strong> appear in both settings.  
 This slope shows how each category shifts from private → public.
 </div>
 """, unsafe_allow_html=True)
@@ -51,7 +51,7 @@ df["space_type"] = df["privacy_location"].apply(
     lambda x: "Private" if x == "Residential" else "Public"
 )
 
-# Pattern 1 categories
+# Pattern categories
 def categorize(pt):
     if pt in ["PUBLIC PEACE VIOLATION", "PUBLIC INDECENCY", "OBSCENITY"]:
         return "Public-Heavy Offenses"
@@ -83,9 +83,9 @@ pivot = pivot.fillna(0)
 
 # Color-blind-safe palette
 color_map = {
-    "Public-Heavy Offenses": "#0072B2",   # Blue
-    "Private-Heavy Offenses": "#009E73",  # Green
-    "Mixed Offense": "#D55E00"            # Orange
+    "Public-Heavy Offenses": "#1B4F72",   # dark blue
+    "Private-Heavy Offenses": "#117A65",  # dark teal
+    "Mixed Offense": "#E67E22"            # dark orange
 }
 
 # Build slope graph
@@ -119,7 +119,7 @@ fig.update_layout(
     plot_bgcolor="#0e1117",
     font_color="#e0e0e0",
     margin={"r":20,"t":50,"l":20,"b":20},
-    showlegend=False  # Legend removed
+    showlegend=False
 )
 
 st.plotly_chart(fig, use_container_width=True)
