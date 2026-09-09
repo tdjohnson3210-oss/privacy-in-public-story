@@ -1,9 +1,9 @@
 import streamlit as st
-import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 
 st.set_page_config(
-    page_title="Slide 4 — What Time of Day Affects Arrest Rates",
+    page_title="Slide 4 — Domestic vs Non‑Domestic Arrest Rate",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -17,63 +17,73 @@ hide_sidebar = """
 """
 st.markdown(hide_sidebar, unsafe_allow_html=True)
 
+# Navigation
 if st.button("Previous"):
     st.switch_page("pages/2_arrest_rate.py")
 if st.button("Next"):
     st.switch_page("pages/4_layered.py")
 
-st.markdown("<h1 style='text-align:center;'>Arrest Rate by Hour</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Shifts Across the Day in Public vs Private Spaces (across all case types)</h3>", unsafe_allow_html=True)
+# Titles
+st.markdown("<h1 style='text-align:center;'>Arrest Rate: Domestic vs Non‑Domestic</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Differs When Incidents Occur in Domestic Contexts</h3>", unsafe_allow_html=True)
 
+# Load data
 df = st.session_state.df_privacy.copy()
 
-df["space_type"] = df["privacy_location"].apply(
-    lambda x: "Private" if x == "Residential" else "Public"
+# Compute arrest rate for domestic vs non‑domestic
+summary = (
+    df.groupby("domestic")["arrest"]
+    .mean()
+    .reset_index()
 )
 
-df["hour"] = df["date"].dt.hour
+summary["label"] = summary["domestic"].map({True: "Domestic", False: "Non‑Domestic"})
+summary["percent"] = summary["arrest"] * 100
 
-total_df = df.groupby(["hour", "space_type"]).size().reset_index(name="total_incidents")
-arrest_df = df[df["arrest"]].groupby(["hour", "space_type"]).size().reset_index(name="arrests")
+# Build slope graph
+fig = go.Figure()
 
-merged = pd.merge(total_df, arrest_df, on=["hour", "space_type"], how="left")
-merged["arrests"] = merged["arrests"].fillna(0)
-merged["percent"] = merged["arrests"] / merged["total_incidents"] * 100
+fig.add_trace(go.Scatter(
+    x=[0, 1],
+    y=summary["percent"],
+    mode="lines+markers+text",
+    text=[f"Non‑Domestic ({summary['percent'].iloc[0]:.1f}%)",
+          f"Domestic ({summary['percent'].iloc[1]:.1f}%)"],
+    textposition="middle right",
+    line=dict(width=3, color="#6baed6"),
+    marker=dict(size=10, color="#08519c")
+))
 
-fig = px.area(
-    merged,
-    x="hour",
-    y="percent",
-    color="space_type",
-    labels={"percent": "Arrest Rate (%)", "hour": "Hour of Day"},
-    title="Arrest Rate Across the Day: Public vs Private Spaces",
-    color_discrete_map={
-        "Public": "#08519c",
-        "Private": "#6baed6"
-    }
-)
-
-for i, trace in enumerate(fig.data):
-    trace.stackgroup = str(i)
-
-fig.update_traces(mode="lines")
+# Layout
 fig.update_layout(
-    margin={"r":0,"t":50,"l":0,"b":0},
-    legend_title_text="Space Type",
-    yaxis=dict(range=[0, 100])
+    title="Arrest Rate Comparison: Domestic vs Non‑Domestic Incidents",
+    xaxis=dict(
+        tickvals=[0, 1],
+        ticktext=["Non‑Domestic", "Domestic"],
+        showgrid=False,
+        zeroline=False
+    ),
+    yaxis=dict(title="Arrest Rate (%)", range=[0, 100]),
+    paper_bgcolor="#0e1117",
+    plot_bgcolor="#0e1117",
+    font_color="#e0e0e0",
+    margin={"r":20,"t":50,"l":20,"b":20}
 )
 
-private_peak = merged[merged["space_type"] == "Private"].sort_values("percent", ascending=False).iloc[0]
+# Annotation (accessible gold)
+domestic_rate = summary[summary["domestic"] == True]["percent"].iloc[0]
 fig.add_annotation(
-    x=private_peak["hour"],
-    y=private_peak["percent"],
-    text=f"Private Peak: {private_peak['percent']:.1f}%",
+    x=1,
+    y=domestic_rate,
+    text=f"<b>Domestic Arrest Rate</b><br>{domestic_rate:.1f}%",
     showarrow=True,
     arrowhead=2,
-    ax=-40,
-    ay=-40,
-    font=dict(color="red", size=12),
-    arrowcolor="red"
+    ax=40,
+    ay=0,
+    font=dict(color="#f4d35e", size=12),
+    bgcolor="rgba(20,20,20,0.7)",
+    bordercolor="#f4d35e",
+    borderwidth=1
 )
 
 st.plotly_chart(fig, use_container_width=True)
