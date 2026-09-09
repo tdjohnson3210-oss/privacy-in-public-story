@@ -15,6 +15,7 @@ Interactive Streamlit application:
 **https://privacy-in-public-story-isgwkmv4keh2hjqrfyczps.streamlit.app/**
 
 Purpose: The app provides an interactive walkthrough of privacy‑related crime patterns, allowing users to explore arrest rates, geographic spread, time‑of‑day trends, and layered behavioral rhythms.  
+
 The app also includes an **embedded Streamlit survey**, replacing the earlier Microsoft Forms version.
 
 ## Data Source
