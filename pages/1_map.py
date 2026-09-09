@@ -39,7 +39,7 @@ st.markdown(f"""
     <li><strong style="color:#3182bd;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
     <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
 </ul>
-<p>The map below uses a lightweight geographic projection centered on Chicago. 
+<p>The map below uses a traditional terrain basemap centered on Chicago. 
 It loads quickly and avoids Mapbox or Folium dependencies.</p>
 </div>
 """, unsafe_allow_html=True)
@@ -99,7 +99,7 @@ df_filtered = (
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
 
-# --- WORKING GEO MAP (NO MAPBOX, NO FOLIUM) ---
+# --- TRADITIONAL TERRAIN MAP (NO MAPBOX, NO FOLIUM) ---
 fig = px.scatter_geo(
     df_filtered,
     lat="latitude",
@@ -115,19 +115,24 @@ fig = px.scatter_geo(
     height=600
 )
 
+fig.update_geos(
+    projection_type="mercator",
+    center=dict(lat=41.8781, lon=-87.6298),
+    lataxis=dict(range=[41.6, 42.1]),
+    lonaxis=dict(range=[-88.0, -87.4]),
+    showcountries=False,
+    showcoastlines=False,
+    showland=True,
+    landcolor="#f0f0f0",
+    subunitcolor="white",
+    resolution=50,
+)
+
 fig.update_layout(
-    title="Geographic Spread of Privacy‑Related Incidents (Chicago Projection)",
-    geo=dict(
-        projection_type="mercator",
-        center=dict(lat=41.8781, lon=-87.6298),
-        lataxis=dict(range=[41.6, 42.1]),
-        lonaxis=dict(range=[-88.0, -87.4]),
-        showland=True,
-        landcolor="#1f1f1f",
-        bgcolor="#0e1117"
-    ),
+    title="Geographic Spread of Privacy‑Related Incidents (Terrain Basemap)",
     margin={"r":0,"t":40,"l":0,"b":0},
     paper_bgcolor="#0e1117",
+    plot_bgcolor="#0e1117",
     font_color="white",
     showlegend=True,
     legend=dict(bgcolor="#0e1117", bordercolor="#0e1117")
