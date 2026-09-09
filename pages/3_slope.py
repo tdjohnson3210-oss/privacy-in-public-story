@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 import pandas as pd
 
 st.set_page_config(
-    page_title="Slide 3 — Public vs Private Arrest Rate",
+    page_title="Slide 3 — Slope: Public vs Private by Case Type",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -25,60 +25,57 @@ if st.button("Next"):
     st.switch_page("pages/4_layered.py")
 
 # Titles
-st.markdown("<h1 style='text-align:center;'>Arrest Rate: Public vs Private Spaces</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Responds Differently When Privacy is Violated in Public vs Private Settings</h3>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;'>How Arrest Rates Shift from Private to Public Spaces</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align:center; color:#3182bd;'>Slope Graph: Enforcement Differences Across Case Types</h3>", unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# LOAD FROM SESSION STATE (your request)
-# ---------------------------------------------------------
+# Load from session_state
 if "df_privacy" not in st.session_state:
     st.error("df_privacy is not loaded in session_state. Load it on the first page.")
     st.stop()
 
 df = st.session_state.df_privacy.copy()
 
-# ---------------------------------------------------------
-# PREPARE PUBLIC vs PRIVATE VARIABLE
-# ---------------------------------------------------------
+# Public vs Private
 df["space_type"] = df["privacy_location"].apply(
     lambda x: "Private" if x == "Residential" else "Public"
 )
 
-# ---------------------------------------------------------
-# COMPUTE ARREST RATE
-# ---------------------------------------------------------
+# Compute arrest rate by case type and space
 summary = (
-    df.groupby("space_type")["arrest"]
+    df.groupby(["primary_type", "space_type"])["arrest"]
     .mean()
     .reset_index()
 )
 
 summary["percent"] = summary["arrest"] * 100
-summary = summary.sort_values("percent", ascending=False)
 
-# ---------------------------------------------------------
-# BUILD SLOPE GRAPH
-# ---------------------------------------------------------
+# Pivot for slope graph
+pivot = summary.pivot(index="primary_type", columns="space_type", values="percent").reset_index()
+
+# Sort by public arrest rate
+pivot = pivot.sort_values("Public", ascending=False)
+
+# Build slope graph
 fig = go.Figure()
 
-fig.add_trace(go.Scatter(
-    x=[0, 1],
-    y=summary["percent"],
-    mode="lines+markers+text",
-    text=[
-        f"Public ({summary['percent'].iloc[0]:.1f}%)",
-        f"Private ({summary['percent'].iloc[1]:.1f}%)"
-    ],
-    textposition="middle right",
-    line=dict(width=3, color="#6baed6"),
-    marker=dict(size=10, color="#08519c")
-))
+for _, row in pivot.iterrows():
+    fig.add_trace(go.Scatter(
+        x=[0, 1],
+        y=[row["Private"], row["Public"]],
+        mode="lines+markers+text",
+        text=[f"{row['primary_type']} ({row['Private']:.1f}%)",
+              f"{row['primary_type']} ({row['Public']:.1f}%)"],
+        textposition="middle right",
+        line=dict(width=2, color="#6baed6"),
+        marker=dict(size=8, color="#08519c"),
+        hovertemplate=f"{row['primary_type']}<br>Private: {row['Private']:.1f}%<br>Public: {row['Public']:.1f}%"
+    ))
 
 fig.update_layout(
-    title="Arrest Rate Comparison: Public vs Private Spaces",
+    title="Arrest Rate Change by Case Type (Private → Public)",
     xaxis=dict(
         tickvals=[0, 1],
-        ticktext=["Public", "Private"],
+        ticktext=["Private", "Public"],
         showgrid=False,
         zeroline=False
     ),
@@ -89,26 +86,4 @@ fig.update_layout(
     margin={"r":20,"t":50,"l":20,"b":20}
 )
 
-# ---------------------------------------------------------
-# ACCESSIBLE ANNOTATION
-# ---------------------------------------------------------
-private_rate = summary[summary["space_type"] == "Private"]["percent"].iloc[0]
-
-fig.add_annotation(
-    x=1,
-    y=private_rate,
-    text=f"<b>Private Arrest Rate</b><br>{private_rate:.1f}%",
-    showarrow=True,
-    arrowhead=2,
-    ax=40,
-    ay=0,
-    font=dict(color="#f4d35e", size=12),
-    bgcolor="rgba(20,20,20,0.7)",
-    bordercolor="#f4d35e",
-    borderwidth=1
-)
-
-# ---------------------------------------------------------
-# RENDER
-# ---------------------------------------------------------
 st.plotly_chart(fig, use_container_width=True)
