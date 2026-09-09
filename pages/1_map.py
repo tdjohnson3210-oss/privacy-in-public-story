@@ -1,9 +1,9 @@
 import streamlit as st
+import plotly.express as px
 import pandas as pd
 import requests
 from io import BytesIO
 from pathlib import Path
-import pydeck as pdk
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
@@ -39,7 +39,6 @@ st.markdown(f"""
     <li><strong style="color:#3182bd;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
     <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
 </ul>
-<p>The map below is a true street map using MapLibre (Pydeck), which works reliably in Streamlit Cloud.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -84,7 +83,7 @@ df_privacy["longitude"] = df_privacy["longitude"].astype(float)
 
 df_privacy["arrest_label"] = df_privacy["arrest"].map({
     True: "Arrest Made",
-    False: "Released"
+    False: "No Arrest"
 })
 
 primary_types = sorted(df_privacy["primary_type"].unique())
@@ -98,35 +97,38 @@ df_filtered = (
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
 
-# --- REAL MAP USING PYDECK (MAPLIBRE) ---
-layer = pdk.Layer(
-    "ScatterplotLayer",
+# Upgraded map
+fig = px.scatter_geo(
     df_filtered,
-    get_position=["longitude", "latitude"],
-    get_fill_color=[
-        "255 if arrest_label == 'Arrest Made' else 120",
-        "180",
-        "255",
-        160
-    ],
-    radius_scale=2,
-    radius_min_pixels=3,
+    lat="latitude",
+    lon="longitude",
+    color="arrest_label",
+    hover_name="primary_type",
+    hover_data=["privacy_location", "time_of_day"],
+    opacity=0.55,
+    color_discrete_map={
+        "Arrest Made": "#4c8bf5",
+        "No Arrest": "#9bbcf5"
+    },
+    height=600
 )
 
-view_state = pdk.ViewState(
-    latitude=41.8781,
-    longitude=-87.6298,
-    zoom=10,
-    pitch=0
+fig.update_layout(
+    title="Geographic Spread of Privacy‑Related Incidents (Traditional Map)",
+    geo=dict(
+        scope="usa",
+        projection_type="mercator",
+        showland=True,
+        landcolor="#1f1f1f",
+        subunitcolor="white",
+        countrycolor="white",
+        bgcolor="#0e1117"
+    ),
+    margin={"r":0,"t":40,"l":0,"b":0},
+    paper_bgcolor="#0e1117",
+    font_color="white",
+    showlegend=True,
+    legend=dict(bgcolor="#0e1117", bordercolor="#0e1117")
 )
 
-map_style = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-
-r = pdk.Deck(
-    layers=[layer],
-    initial_view_state=view_state,
-    map_style=map_style,
-    tooltip={"text": "{primary_type}\n{privacy_location}\n{time_of_day}"}
-)
-
-st.pydeck_chart(r)
+st.plotly_chart(fig, use_container_width=True)
