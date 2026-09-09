@@ -68,16 +68,23 @@ fig = px.bar(
 )
 
 fig.update_layout(
-    coloraxis_colorbar=dict(
-        title="Case Volume",
-        tickfont=dict(color="#e0e0e0"),
-        titlefont=dict(color="#e0e0e0")
-    ),
     xaxis_tickangle=-45,
     margin={"r":0,"t":50,"l":0,"b":0},
     paper_bgcolor="#0e1117",
     plot_bgcolor="#0e1117",
     font_color="#e0e0e0"
+)
+
+# Manual legend annotation (replaces coloraxis_colorbar)
+fig.add_annotation(
+    x=0.98,
+    y=0.95,
+    xref="paper",
+    yref="paper",
+    text="<b>Darker bars = more cases</b>",
+    showarrow=False,
+    font=dict(color="#e0e0e0", size=12),
+    align="right"
 )
 
 # Annotation: highlight Criminal Trespass
