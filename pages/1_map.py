@@ -39,10 +39,8 @@ st.markdown(f"""
     <li><strong style="color:#3182bd;">• Where privacy intrusions are most likely to occur: {st.session_state.get("q3", "")}</strong></li>
     <li><strong style="color:#3182bd;">• When privacy intrusions are most common: {st.session_state.get("q4", "")}</strong></li>
 </ul>
-<p>To keep the visualization lightweight and responsive, the chart below uses a simple latitude–longitude scatter instead of a full map. 
-Even without basemap tiles, the spread of points makes the pattern clear: privacy‑related incidents occur across the entire city, not 
-clustered in any single neighborhood. This “map‑like” view preserves the geographic story while avoiding the performance issues of 
-tile‑based mapping.</p>
+<p>The map below shows the geographic spread of privacy‑related incidents across Chicago. 
+Using a traditional basemap helps highlight how these incidents occur city‑wide rather than clustering in a single neighborhood.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -76,10 +74,7 @@ if "df_privacy" not in st.session_state:
         st.session_state.df_privacy = load_privacy_data()
     except requests.HTTPError:
         st.error(
-            "The dataset URL is not publicly readable yet. In Google Cloud Storage, make the object public or use a publicly accessible direct-download link."
-        )
-        st.code(
-            "gsutil acl ch -u AllUsers:R gs://t-race-datasets/chicago_crime_snapshot_08242026.parquet"
+            "The dataset URL is not publicly readable yet. Make the object public or use a direct-download link."
         )
         st.stop()
     except Exception as exc:
@@ -112,7 +107,7 @@ df_filtered = (
 if len(df_filtered) > 8000:
     df_filtered = df_filtered.sample(8000, random_state=42)
 
-# traditional map upgrade
+# Upgraded traditional map
 fig = px.scatter_mapbox(
     df_filtered,
     lat="latitude",
@@ -129,7 +124,7 @@ fig = px.scatter_mapbox(
 )
 
 fig.update_layout(
-    mapbox_style="carto-positron",   # No token required
+    mapbox_style="open-street-map",
     title="Geographic Spread of Privacy‑Related Incidents (Mapbox)",
     margin={"r":0,"t":40,"l":0,"b":0},
     plot_bgcolor="#0e1117",
