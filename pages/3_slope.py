@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 import pandas as pd
 
 st.set_page_config(
-    page_title="Slide 3 — Slope: Public vs Private Categories",
+    page_title="Slide 3 — Public vs Private Patterns",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -19,16 +19,27 @@ hide_sidebar = """
 st.markdown(hide_sidebar, unsafe_allow_html=True)
 
 # Navigation
-if st.button("Previous"):
+cols = st.columns([1,1,8])
+if cols[0].button("← Previous"):
     st.switch_page("pages/2_arrest_rate.py")
-if st.button("Next"):
+if cols[1].button("Next →"):
     st.switch_page("pages/4_layered.py")
 
-# Titles
+# Title
 st.markdown("<h1 style='text-align:center;'>Public vs Private Patterns Across Privacy Offense Categories</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align:center; color:#3182bd;'>Slope Graph: How Offense Categories Shift Between Private and Public Spaces</h3>", unsafe_allow_html=True)
 
-# Load from session_state
+# Brief explanation
+st.markdown("""
+<div style='text-align:center; font-size:18px; color:#cfcfcf; max-width:900px; margin:auto;'>
+Privacy-related offenses fall into three natural behavioral patterns.  
+<strong style='color:#ff6b6b;'>Public-heavy offenses</strong> (e.g., Public Indecency, Obscenity) occur overwhelmingly in public spaces.  
+<strong style='color:#4da6ff;'>Private-heavy offenses</strong> (e.g., Stalking, Intimidation) cluster in private environments.  
+<strong style='color:#f4d35e;'>Mixed offenses</strong> (Criminal Trespass) appear in both settings.  
+This slope shows how each category shifts from private → public.
+</div>
+""", unsafe_allow_html=True)
+
+# Load data
 if "df_privacy" not in st.session_state:
     st.error("df_privacy is not loaded in session_state. Load it on the first page.")
     st.stop()
@@ -49,9 +60,10 @@ def categorize(pt):
     elif pt == "CRIMINAL TRESPASS":
         return "Mixed Offense"
     else:
-        return "Other"
+        return None
 
 df["category"] = df["primary_type"].apply(categorize)
+df = df.dropna(subset=["category"])
 
 # Compute counts
 summary = (
@@ -65,12 +77,16 @@ total_by_cat = summary.groupby("category")["count"].sum().reset_index(name="tota
 summary = summary.merge(total_by_cat, on="category")
 summary["share"] = summary["count"] / summary["total"]
 
-# Pivot for slope graph
+# Pivot
 pivot = summary.pivot(index="category", columns="space_type", values="share").reset_index()
 pivot = pivot.fillna(0)
 
-# Sort by public share
-pivot = pivot.sort_values("Public", ascending=False)
+# Colors mapped to meaning
+color_map = {
+    "Public-Heavy Offenses": "#ff6b6b",   # red
+    "Private-Heavy Offenses": "#4da6ff",  # blue
+    "Mixed Offense": "#f4d35e"            # gold
+}
 
 # Build slope graph
 fig = go.Figure()
@@ -85,8 +101,8 @@ for _, row in pivot.iterrows():
             f"{row['category']} ({row['Public']*100:.1f}%)"
         ],
         textposition="middle right",
-        line=dict(width=3, color="#6baed6"),
-        marker=dict(size=10, color="#08519c"),
+        line=dict(width=4, color=color_map[row["category"]]),
+        marker=dict(size=12, color=color_map[row["category"]]),
         hovertemplate=f"{row['category']}<br>Private: {row['Private']*100:.1f}%<br>Public: {row['Public']*100:.1f}%"
     ))
 
@@ -102,7 +118,8 @@ fig.update_layout(
     paper_bgcolor="#0e1117",
     plot_bgcolor="#0e1117",
     font_color="#e0e0e0",
-    margin={"r":20,"t":50,"l":20,"b":20}
+    margin={"r":20,"t":50,"l":20,"b":20},
+    showlegend=False  # REMOVE LEGEND
 )
 
 st.plotly_chart(fig, use_container_width=True)
