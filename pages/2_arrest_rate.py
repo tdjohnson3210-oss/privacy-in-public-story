@@ -50,7 +50,7 @@ arrest_rates = rate_df[rate_df["arrest"]].merge(volume_df, on="primary_type")
 # Sort by arrest rate
 arrest_rates = arrest_rates.sort_values("percent", ascending=True)
 
-# Horizontal bar chart (advanced + accessible)
+# Horizontal bar chart (updated)
 fig = px.bar(
     arrest_rates,
     y="primary_type",
@@ -66,7 +66,6 @@ fig = px.bar(
     title="Arrest Rate by Case Type (Colored by Total Case Volume)"
 )
 
-# Clean dark theme
 fig.update_layout(
     xaxis_title="Arrest Rate (%)",
     yaxis_title="",
@@ -76,7 +75,6 @@ fig.update_layout(
     margin={"r":20,"t":50,"l":20,"b":20}
 )
 
-# Accessible annotation: highlight Criminal Trespass
 ct = arrest_rates[arrest_rates["primary_type"] == "CRIMINAL TRESPASS"].iloc[0]
 fig.add_annotation(
     y=ct["primary_type"],
@@ -93,12 +91,13 @@ fig.add_annotation(
     align="left"
 )
 
-# Small legend note
+# Legend note
 fig.add_annotation(
     x=0.98,
     y=0.95,
     xref="paper",
     yref="paper",
+    text="",
     showarrow=False,
     font=dict(color="#e0e0e0", size=12),
     align="right"
