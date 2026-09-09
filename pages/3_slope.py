@@ -3,11 +3,12 @@ import plotly.graph_objects as go
 import pandas as pd
 
 st.set_page_config(
-    page_title="Slide 4 — Public vs Private Arrest Rate",
+    page_title="Slide 3 — Public vs Private Arrest Rate",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
+# Hide sidebar
 hide_sidebar = """
     <style>
         [data-testid="stSidebar"] {display: none;}
@@ -27,14 +28,25 @@ if st.button("Next"):
 st.markdown("<h1 style='text-align:center;'>Arrest Rate: Public vs Private Spaces</h1>", unsafe_allow_html=True)
 st.markdown("<h3 style='text-align:center; color:#3182bd;'>How Enforcement Responds Differently When Privacy is Violated in Public vs Private Settings</h3>", unsafe_allow_html=True)
 
-df = st.session_state.df_privacy.copy()
+# ---------------------------------------------------------
+# LOAD DATA DIRECTLY (no session_state needed)
+# ---------------------------------------------------------
+df_privacy = pd.read_parquet(
+    "https://mygcuedu6961-my.sharepoint.com/:u:/g/personal/tjohnson779_my_gcu_edu/IQCth27bkUiKTL_u9yv-p5AIAR81_4SFGqJsceC7kFq7cpM?download=1"
+)
 
-# Map privacy_location → public/private
+df = df_privacy.copy()
+
+# ---------------------------------------------------------
+# PREPARE PUBLIC vs PRIVATE VARIABLE
+# ---------------------------------------------------------
 df["space_type"] = df["privacy_location"].apply(
     lambda x: "Private" if x == "Residential" else "Public"
 )
 
-# Compute arrest rate
+# ---------------------------------------------------------
+# COMPUTE ARREST RATE
+# ---------------------------------------------------------
 summary = (
     df.groupby("space_type")["arrest"]
     .mean()
@@ -44,15 +56,19 @@ summary = (
 summary["percent"] = summary["arrest"] * 100
 summary = summary.sort_values("percent", ascending=False)
 
-# Build slope graph
+# ---------------------------------------------------------
+# BUILD SLOPE GRAPH
+# ---------------------------------------------------------
 fig = go.Figure()
 
 fig.add_trace(go.Scatter(
     x=[0, 1],
     y=summary["percent"],
     mode="lines+markers+text",
-    text=[f"Public ({summary['percent'].iloc[0]:.1f}%)",
-          f"Private ({summary['percent'].iloc[1]:.1f}%)"],
+    text=[
+        f"Public ({summary['percent'].iloc[0]:.1f}%)",
+        f"Private ({summary['percent'].iloc[1]:.1f}%)"
+    ],
     textposition="middle right",
     line=dict(width=3, color="#6baed6"),
     marker=dict(size=10, color="#08519c")
@@ -73,8 +89,11 @@ fig.update_layout(
     margin={"r":20,"t":50,"l":20,"b":20}
 )
 
-# Accessible annotation
+# ---------------------------------------------------------
+# ACCESSIBLE ANNOTATION
+# ---------------------------------------------------------
 private_rate = summary[summary["space_type"] == "Private"]["percent"].iloc[0]
+
 fig.add_annotation(
     x=1,
     y=private_rate,
@@ -89,4 +108,7 @@ fig.add_annotation(
     borderwidth=1
 )
 
+# ---------------------------------------------------------
+# RENDER
+# ---------------------------------------------------------
 st.plotly_chart(fig, use_container_width=True)
